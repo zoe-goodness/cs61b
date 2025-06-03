@@ -137,7 +137,13 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -147,7 +153,16 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i, j) != null) {
+                    if (b.tile(i, j).value() == MAX_PIECE) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
@@ -158,8 +173,49 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+        //i represents column, j represents row
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i, j) != null) {
+                    int value = b.tile(i, j).value();
+                    if (value == calculateTileValue(b, i - 1, j)) {
+                        return true;
+                    }
+                    if (value == calculateTileValue(b, i + 1, j)) {
+                        return true;
+                    }
+                    if (value == calculateTileValue(b, i, j + 1)) {
+                        return true;
+                    }
+                    if (value == calculateTileValue(b, i, j - 1)) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
+    }
+
+    /**
+     * calculate the tile value for column i, row j
+     * the tile exists return tile value otherwise return 0 (including i or j pass over the size)
+     * @param b
+     * @param i column
+     * @param j row
+     * @return
+     */
+    private static int calculateTileValue(Board b, int i, int j) {
+        if (i < 0 || i > b.size() - 1 || j < 0 || j > b.size() - 1) {
+            return 0;
+        }
+        if (b.tile(i, j) == null) {
+            return 0;
+        } else {
+            return b.tile(i, j).value();
+        }
     }
 
 
