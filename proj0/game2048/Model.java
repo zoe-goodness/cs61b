@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author TODO: bitterlucky
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -113,13 +113,171 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        board.setViewingPerspective(side);
+        // i 表示column
+        for (int i = 0; i < board.size(); i++) {
+            boolean[] hasMerged = {false, false, false, false};
+            for (int j = 3; j >= 0; j--) {
+                if (j == 3) {
+                    continue;
+                } else if (j == 2) {
+                    //j = 2的地方没有tile
+                    if (board.tile(i, 2) == null) {
+                        continue;
+                    } else {//j = 2的地方有tile
+                        //j = 3的地方没有tile
+                        if (board.tile(i, 3) == null) {
 
+                            board.move(i, 3, board.tile(i, 2));
+                            changed = true;
+                        } else { //j=3的地方有tile
+                            //如果两个tile值相等
+                            if (board.tile(i, 3).value() == board.tile(i, 2).value()) {
+                                int originValue = board.tile(i, 2).value();
+                                board.move(i, 3, board.tile(i, 2));
+                                changed = true;
+                                score += 2 * originValue;
+                                hasMerged[3] = true;
+                            } else {//两个tile值不等
+                                continue;
+                            }
+                        }
+                    }
+                } else if (j == 1) {
+                    //如果j=1的地方没有tile
+                    if (board.tile(i, 1) == null) {
+                        continue;
+                    } else {
+                        //如果j=1的地方有tile
+                        if (board.tile(i, 2) != null) {
+                            //j == 2的地方有tile
+                            if (board.tile(i, 1).value() == board.tile(i, 2).value()) {
+                                //如果j==2和j==1的tile的value相等
+                                int originValue = board.tile(i, 2).value();
+                                board.move(i, 2, board.tile(i, 1));
+                                changed = true;
+                                score += 2 * originValue;
+                                hasMerged[2] = true;
+                            } else {
+                               //如果j==2和j==1的tile的value不等
+                               continue;
+                            }
+                        } else {
+                            //j == 2的地方没有tile
+                            if (board.tile(i, 3) == null) {
+//                                j == 3的地方没有tile
+                                board.move(i, 3, board.tile(i, 1));
+                                changed = true;
+                            } else {
+                                //j == 3的地方有tile
+                                if (hasMerged[3] == true) {
+                                    //hasMerged[3] == true
+                                    board.move(i, 2, board.tile(i, 1));
+                                    changed = true;
+                                } else {
+                                    //hasMerged[3] = false
+                                    if (board.tile(i, 3).value() == board.tile(i, 1).value()) {
+                                        //tile的value相等
+                                        int originValue = board.tile(i, 3).value();
+                                        board.move(i, 3, board.tile(i, 1));
+                                        changed = true;
+                                        score += 2 * originValue;
+                                        hasMerged[3] = true;
+                                    } else {
+                                        //tilevalue不等
+                                        board.move(i, 2, board.tile(i, 1));
+                                        changed = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else if (j == 0) {
+                    if (board.tile(i, 0) == null) {
+                        //j = 0 的地方没有tile
+                        continue;
+                    } else {
+                        //j == 0的地方有tile
+                        if (board.tile(i, 1) != null) {
+                            // j == 1的地方有tile
+                            if (board.tile(i, 0).value() == board.tile(i, 1).value()) {
+                                //j = 0的value和j=1的value相等
+                                int originValue = board.tile(i, 0).value();
+                                board.move(i, 1, board.tile(i, 0));
+                                changed = true;
+                                score += 2 * originValue;
+                                hasMerged[1] = true;
+                            } else {
+                                //j=0的value和j=1的value不等
+                                continue;
+                            }
+                        } else {
+                            //j == 1的地方没有tile
+                            if (board.tile(i, 2) != null) {
+                                //j = 2的地方有tile
+                                if (hasMerged[2] == true) {
+                                    //hasMerged[2] = true
+                                    board.move(i, 1, board.tile(i, 0));
+                                    changed = true;
+                                } else {
+                                    //hasMerged[2] = false
+                                    if (board.tile(i, 0).value() == board.tile(i, 2).value()) {
+                                        //如果j=0的value和j=2的value相等
+                                        int originValue = board.tile(i, 0).value();
+                                        board.move(i, 2, board.tile(i, 0));
+                                        changed = true;
+                                        score += 2 * originValue;
+                                        hasMerged[2] = true;
+                                    } else {
+                                        //j=0的value和j=2的value不等
+                                        board.move(i, 1, board.tile(i, 0));
+                                        changed = true;
+                                    }
+                                }
+                            } else {
+                                //j = 2的地方没有tile
+                                if (board.tile(i, 3) == null) {
+                                    //j = 3的地方没有tile
+                                    board.move(i, 3, board.tile(i, 0));
+                                    changed = true;
+                                } else {
+                                    //j = 3的地方有tile
+                                    if (hasMerged[3] == true) {
+                                        //hasMerged[3] = true
+                                        board.move(i, 2, board.tile(i, 0));
+                                        changed = true;
+                                    } else {
+                                        //hasMerged[3] = false
+                                        if (board.tile(i, 0).value() == board.tile(i, 3).value()) {
+                                            //j = 0 的value和j = 3的value相等
+                                            int originValue = board.tile(i, 0).value();
+                                            board.move(i, 3, board.tile(i, 0));
+                                            changed = true;
+                                            score += 2 * originValue;
+                                            hasMerged[3] = true;
+                                        } else {
+                                            // j = 0的value和j=3的value不等
+                                            board.move(i, 2, board.tile(i, 0));
+                                            changed = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
     }
+
+
+
 
     /** Checks if the game is over and sets the gameOver variable
      *  appropriately.
