@@ -12,7 +12,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         size = 0;
         nextFirst = 0;
         nextLast = 1;
-        array = (T[])new Object[8];
+        array = (T[]) new Object[8];
     }
     @Override
     public void addFirst(T item) {
@@ -23,7 +23,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         nextFirst = parseIndex(nextFirst - 1);
         size++;
     }
-    public void resize(int capacity) {
+    private void resize(int capacity) {
         T[] newArray = (T[]) new Object[capacity];
         for (int i = 0; i < size; i++) {
             newArray[i] = get(i);
@@ -48,7 +48,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     public int size() {
         return size;
     }
-    public int parseIndex(int index) {
+    private int parseIndex(int index) {
         if (index == array.length) {
             return 0;
         } else if (index == -1) {
@@ -123,25 +123,29 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             wizPos += 1;
             return returnItem;
         }
-        @Override
-        public boolean equals(Object o) {
-            if (o == this) {
-                return true;
-            }
-            if (o.getClass() != this.getClass()) {
-                return false;
-            }
-            Deque deque = (Deque) o;
-            if (deque.size() != size) {
-                return false;
-            }
-            for (int i = 0; i < size; i++) {
-                if (!get(i).equals(deque.get(i))) {
-                    return false;
-                }
-            }
-            return true;
 
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
         }
+        if (o == this) {
+            return true;
+        }
+//        if (o.getClass() != this.getClass()) {
+//            return false;
+//        }
+        Deque deque = (Deque) o;
+        if (deque.size() != size) {
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            if (!get(i).equals(deque.get(i))) {
+                return false;
+            }
+        }
+        return true;
+
     }
 }

@@ -2,14 +2,14 @@ package deque;
 
 import java.util.Iterator;
 
-public class LinkedListDeque<T> implements Deque<T>, Iterable<T>{
-    int size;
-    Node sentinel;
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
+    private int size;
+    private Node sentinel;
     private class Node {
         T item;
         Node prev;
         Node next;
-        Node (T item, Node prev, Node next) {
+        Node(T item, Node prev, Node next) {
             this.item = item;
             this.prev = prev;
             this.next = next;
@@ -127,12 +127,15 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T>{
     }
     @Override
     public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
         if (o == this) {
             return true;
         }
-        if (o.getClass() != this.getClass()) {
-            return false;
-        }
+//        if (o.getClass() != this.getClass()) {
+//            return false;
+//        }
         Deque deque = (Deque) o;
         if (deque.size() != size) {
             return false;
