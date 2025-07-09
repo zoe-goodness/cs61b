@@ -47,6 +47,9 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     @Override
     public void put(K key, V value) {
+        if (key == null) {
+            throw new IllegalArgumentException("Null keys are not allowed.");
+        }
         int hashCode = Math.floorMod(key.hashCode(), buckets.length);
         if (containsKey(key)) {
             Iterator<Node> iterator = buckets[hashCode].iterator();
@@ -69,6 +72,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     private void grow() {
         int originalLength = buckets.length;
         Collection<Node>[] newBuckets = createTable(originalLength * 2);
+        this.initialSize = originalLength * 2;
         for (int i = 0; i < buckets.length; i++) {
             Iterator<Node> iterator = buckets[i].iterator();
             while (iterator.hasNext()) {
