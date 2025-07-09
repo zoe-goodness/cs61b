@@ -73,7 +73,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             Iterator<Node> iterator = buckets[i].iterator();
             while (iterator.hasNext()) {
                 Node next = iterator.next();
-                newBuckets[Math.floorMod(next.hashCode(), newBuckets.length)].add(next);
+                newBuckets[Math.floorMod(next.key.hashCode(), newBuckets.length)].add(next);
             }
         }
         buckets = newBuckets;
