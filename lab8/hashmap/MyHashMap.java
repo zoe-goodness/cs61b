@@ -100,7 +100,16 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         }
         V value = get(key);
         int hashCode = Math.floorMod(key.hashCode(), buckets.length);
-        buckets[hashCode].remove(new Node(key, value));
+        Iterator<Node> iterator = buckets[hashCode].iterator();
+        Node tempNode = null;
+        while (iterator.hasNext()) {
+            Node next = iterator.next();
+            if (key.equals(next.key)) {
+                tempNode = next;
+                break;
+            }
+        }
+        buckets[hashCode].remove(tempNode);
         this.size -= 1;
         keySet.remove(key);
         return value;
@@ -117,7 +126,16 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             return null;
         }
         int hashCode = Math.floorMod(key.hashCode(), buckets.length);
-        buckets[hashCode].remove(new Node(key, value));
+        Iterator<Node> iterator = buckets[hashCode].iterator();
+        Node tempNode = null;
+        while (iterator.hasNext()) {
+            Node next = iterator.next();
+            if (key.equals(next.key)) {
+                tempNode = next;
+                break;
+            }
+        }
+        buckets[hashCode].remove(tempNode);
         this.size -= 1;
         keySet.remove(key);
         return returnValue;
@@ -141,14 +159,6 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             value = v;
         }
 
-        @Override
-        public boolean equals(Object obj) {
-            Node other = (Node)obj;
-            if (key.equals(other.key) && value.equals(other.value)) {
-                return true;
-            }
-            return false;
-        }
     }
 
     /* Instance Variables */
