@@ -95,12 +95,28 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException();
+        if (key == null) {
+            return null;
+        }
+        V value = get(key);
+        int hashCode = Math.floorMod(key.hashCode(), buckets.length);
+        buckets[hashCode].remove(key);
+        return value;
+
     }
 
     @Override
     public V remove(K key, V value) {
-        throw new UnsupportedOperationException();
+        if (key == null) {
+            return null;
+        }
+        V returnValue = get(key);
+        if (!returnValue.equals(value)) {
+            return null;
+        }
+        int hashCode = Math.floorMod(key.hashCode(), buckets.length);
+        buckets[hashCode].remove(key);
+        return returnValue;
     }
 
     @Override
