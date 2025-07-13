@@ -100,7 +100,9 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         }
         V value = get(key);
         int hashCode = Math.floorMod(key.hashCode(), buckets.length);
-        buckets[hashCode].remove(key);
+        buckets[hashCode].remove(new Node(key, value));
+        this.size -= 1;
+        keySet.remove(key);
         return value;
 
     }
@@ -115,7 +117,9 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             return null;
         }
         int hashCode = Math.floorMod(key.hashCode(), buckets.length);
-        buckets[hashCode].remove(key);
+        buckets[hashCode].remove(new Node(key, value));
+        this.size -= 1;
+        keySet.remove(key);
         return returnValue;
     }
 
@@ -135,6 +139,15 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         Node(K k, V v) {
             key = k;
             value = v;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            Node other = (Node)obj;
+            if (key.equals(other.key) && value.equals(other.value)) {
+                return true;
+            }
+            return false;
         }
     }
 
