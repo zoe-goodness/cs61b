@@ -17,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.List;
+import java.util.TreeMap;
 
 
 /** Assorted utilities.
@@ -27,6 +28,21 @@ import java.util.List;
  *  @author P. N. Hilfinger
  */
 class Utils {
+
+    /**我自己方便用来写代码的注释 //TODO： 最后commit的时候要删除掉
+     * serialize：将对象序列化为字节数组，即把commit序列化为字节数组
+     * writeCommit:将可序列化对象写入文件,即把commit对象写入文件
+     * sha1ForCommit:得到commit的sha1
+     * sha1ForCommitPrefix:得到commit的sha1的前两个字符串
+     * sha1ForCommitsuffix：得到commit的sha1的除了前两个字符串剩余的字符串
+     * writeHead
+     * getHead
+     *
+     */
+
+
+
+
 
     /** The length of a complete SHA-1 UID as a hexadecimal numeral. */
     static final int UID_LENGTH = 40;
@@ -236,4 +252,51 @@ class Utils {
         System.out.printf(msg, args);
         System.out.println();
     }
+
+
+    /* utils for mine */
+    static boolean initialized() {
+        if (Repository.GITLET_DIR.exists()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    static String sha1ForCommit(Commit commit) {
+        return sha1(serialize(commit));
+    }
+    static String sha1ForCommitPrefix(Commit commit) {
+        return sha1(serialize(commit)).substring(0, 2);
+    }
+    static String sha1ForCommitSuffix(Commit commit) {
+        return sha1(serialize(commit)).substring(2);
+    }
+    static void writeCommit(Commit commit) {
+        File firstDirectory = join(Repository.OBJECTS_DIR, sha1ForCommitPrefix(commit));
+        if (!firstDirectory.exists()) {
+            firstDirectory.mkdir();
+        }
+        writeObject(join(firstDirectory, sha1ForCommitSuffix(commit)), commit);
+    }
+    static void writeHead(Commit commit) {
+        writeObject(join(Repository.TEMP_DIR, "head"), commit);
+    }
+    static Commit getHead() {
+        return readObject(join(Repository.TEMP_DIR, "head"), Commit.class);
+    }
+    static TreeMap getStagedForFile() {
+        return readObject(join(Repository.TEMP_DIR, "stagedForFile"), TreeMap.class);
+    }
+    static TreeMap getRmForFile() {
+        return readObject(join(Repository.TEMP_DIR, "rmForFile"), TreeMap.class);
+    }
+    static void writeStagedForFile(TreeMap stagedForFile) {
+        writeObject(join(Repository.TEMP_DIR, "stagedForFile"), stagedForFile);
+    }
+    static void writeRmForFile(TreeMap rmForFile) {
+        writeObject(join(Repository.TEMP_DIR, "rmForFile"), rmForFile);
+    }
+
 }
