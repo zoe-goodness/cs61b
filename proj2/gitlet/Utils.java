@@ -1,5 +1,6 @@
 package gitlet;
 
+
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -37,7 +38,14 @@ class Utils {
      * sha1ForCommitsuffix：得到commit的sha1的除了前两个字符串剩余的字符串
      * writeHead
      * getHead
-     *
+     * getRmForFile
+     * writeRmForFile
+     * getStagedForFile
+     * writeStagedForFile
+     * writeBlob:把Blob写入到.gitlet/objects中（即把工作目录中的filename写到.gitlet/objects中）
+     * sha1ForFileNameForCWD:得到的是CWD中filename的sha1，注意是CWD，不是objects中的sha1
+     * deleteStagedAreaForCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1要相同
+     * deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
      */
 
 
@@ -263,16 +271,19 @@ class Utils {
         }
     }
 
-
+    //    * sha1ForCommit:得到commit的sha1
     static String sha1ForCommit(Commit commit) {
         return sha1(serialize(commit));
     }
+    //     * sha1ForCommitPrefix:得到commit的sha1的前两个字符串
     static String sha1ForCommitPrefix(Commit commit) {
         return sha1(serialize(commit)).substring(0, 2);
     }
+    //     * sha1ForCommitsuffix：得到commit的sha1的除了前两个字符串剩余的字符串
     static String sha1ForCommitSuffix(Commit commit) {
         return sha1(serialize(commit)).substring(2);
     }
+    //写commit
     static void writeCommit(Commit commit) {
         File firstDirectory = join(Repository.OBJECTS_DIR, sha1ForCommitPrefix(commit));
         if (!firstDirectory.exists()) {
@@ -280,23 +291,74 @@ class Utils {
         }
         writeObject(join(firstDirectory, sha1ForCommitSuffix(commit)), commit);
     }
+    //写head
     static void writeHead(Commit commit) {
         writeObject(join(Repository.TEMP_DIR, "head"), commit);
     }
+    //读取head
     static Commit getHead() {
         return readObject(join(Repository.TEMP_DIR, "head"), Commit.class);
     }
+    //读取stagedforfile
     static TreeMap getStagedForFile() {
         return readObject(join(Repository.TEMP_DIR, "stagedForFile"), TreeMap.class);
     }
+    //读取rmforfile
     static TreeMap getRmForFile() {
         return readObject(join(Repository.TEMP_DIR, "rmForFile"), TreeMap.class);
     }
+    //写stagedforfile
     static void writeStagedForFile(TreeMap stagedForFile) {
         writeObject(join(Repository.TEMP_DIR, "stagedForFile"), stagedForFile);
     }
+    //写rmforfile
     static void writeRmForFile(TreeMap rmForFile) {
         writeObject(join(Repository.TEMP_DIR, "rmForFile"), rmForFile);
+    }
+    //把Blob写入到.gitlet/objects中（即把工作目录中的filename写到.gitlet/objects中）
+    static void writeBlob(String fileName) {
+        String sha1ForFileName = sha1(readContentsAsString(join(Repository.CWD, fileName)));
+        if (!join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).exists()) {
+            join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).mkdir();
+        }
+        writeContents(join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)), readContents(join(Repository.CWD, fileName)));
+
+    }
+//    把Blob写入到.gitlet/objects中（即把工作目录中的filename写到.gitlet/objects中）
+//    并把blob添加到stagedForFile中
+    static TreeMap writeBlobForStagedArea(String fileName, TreeMap<String, String> stagedForFile) {
+        writeBlob(fileName);
+        stagedForFile.put(fileName, sha1ForFileNameForCWD(fileName));
+        return stagedForFile;
+    }
+
+    //sha1ForFileNameForCWD:得到的是CWD中filename的sha1，注意是CWD，不是objects中的sha1
+    static String sha1ForFileNameForCWD(String fileName) {
+        return sha1(readContentsAsString(join(Repository.CWD, fileName)));
+    }
+    //deleteStagedAreaForCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1要相同
+    static TreeMap deleteStagedAreaForCWD(String fileName, TreeMap stagedForFile) {
+        String sha1ForFileName = sha1ForFileNameForCWD(fileName);
+        stagedForFile.remove(fileName);
+        if (join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).listFiles().length == 1) {
+            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)).delete();
+            join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).delete();
+        } else {
+            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)).delete();
+        }
+        return stagedForFile;
+    }
+    //deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
+    static TreeMap deleteStagedAreaForNotCWD(String fileName, TreeMap<String, String> stagedForFile) {
+        String sha1ForFileName = stagedForFile.get(fileName);
+        stagedForFile.remove(fileName);
+        if (join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).listFiles().length == 1) {
+            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)).delete();
+            join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).delete();
+        } else {
+            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)).delete();
+        }
+        return stagedForFile;
     }
 
 }
