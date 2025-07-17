@@ -40,7 +40,7 @@ public class Repository {
     public static void init() {
         GITLET_DIR.mkdir();
         OBJECTS_DIR.mkdir();
-        Commit initialCommit = new Commit("initial commit", new Date(0), null, null, null, null, null);
+        Commit initialCommit = new Commit("initial commit", new Date(0), new TreeMap<String, String>(), null, null, null, null);
         writeCommit(initialCommit);
         head = initialCommit;
         TEMP_DIR.mkdir();
@@ -172,6 +172,16 @@ public class Repository {
             writeStagedForFile(stagedForFile);
             writeRmForFile(rmForFile);
         }
+    }
+
+    public static void log() {
+        head = getHead();
+        Commit tempCommit = head;
+        while (tempCommit.getFirstParentString() != null) {
+            printCommitInfo(tempCommit);
+            tempCommit = getCommitByCommitSha1(tempCommit.getFirstParentString());
+        }
+        printCommitInfo(tempCommit);
     }
 
 

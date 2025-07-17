@@ -15,10 +15,8 @@ import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Formatter;
-import java.util.List;
-import java.util.TreeMap;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 /** Assorted utilities.
@@ -46,6 +44,8 @@ class Utils {
      * sha1ForFileNameForCWD:得到的是CWD中filename的sha1，注意是CWD，不是objects中的sha1
      * deleteStagedAreaForCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1要相同
      * deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
+     * getCommitByCommitSha1:通过给commit的sha1value，得到在objects中的这个Commit
+     * printCommitInfo:用于log输出commit信息
      */
 
 
@@ -360,5 +360,24 @@ class Utils {
         }
         return stagedForFile;
     }
+//    getCommitByCommitSha1:通过给commit的sha1value，得到在objects中的这个Commit
+    static Commit getCommitByCommitSha1(String sha1) {
+        return readObject(join(join(Repository.OBJECTS_DIR, sha1.substring(0, 2)), sha1.substring(2)), Commit.class);
+    }
+    static void printCommitInfo(Commit commit) {
+        System.out.println("===");
+        System.out.println("commit " + sha1ForCommit(commit));
 
+        if (commit.getSecondParentObject() != null) {
+            System.out.println("Merge: " +
+                    commit.getFirstParentString().substring(0, 7) + " " +
+                    commit.getSecondParentString().substring(0, 7));
+        }
+
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getDefault());
+        System.out.println("Date: " + sdf.format(commit.getTimestamp()));
+        System.out.println(commit.getMessage());
+        System.out.println();
+    }
 }

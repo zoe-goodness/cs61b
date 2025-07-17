@@ -60,6 +60,17 @@ public class Main {
                 }
                 Repository.commit(args[1]);
                 break;
+            case "log":
+                if (args.length != 1) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                if (!Utils.initialized()) {
+                    System.out.println("Not in an initialized Gitlet directory.");
+                    System.exit(0);
+                }
+                Repository.log();
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);
