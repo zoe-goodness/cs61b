@@ -1,7 +1,9 @@
 package gitlet;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.TreeMap;
 
 import static gitlet.Utils.*;
@@ -182,6 +184,80 @@ public class Repository {
             tempCommit = getCommitByCommitSha1(tempCommit.getFirstParentString());
         }
         printCommitInfo(tempCommit);
+    }
+
+    /**
+     * 1.java gitlet.Main checkout -- [文件名]
+     * 从当前 head（即当前分支的最新提交）中取出指定文件的版本，放到工作目录中。
+     * 如果该文件已经存在，则覆盖它。注意：此操作不会将文件加入暂存区（staging area）。
+     * 2.java gitlet.Main checkout [提交ID] -- [文件名]
+     * 从指定提交（通过 commit id 指定）中取出文件的版本，并放入工作目录，覆盖当前版本。
+     * 该文件同样不会被加入暂存区。
+     * 3.java gitlet.Main checkout [分支名]
+     * 获取指定分支head提交中的所有文件（注意这个head是类似master这种，而不是真正的head），
+     * 并把他们放在working directory中（覆盖已存在的文件版本如果存在的话）。此外，head需要指向
+     * 这个指定分支。
+     * 第三种情况的注意点：1.在当前分支中（head）跟踪（即commit指向的文件）但不存在于checkout分支中的
+     * 任何文件都将被删除
+     * 2.暂存区会被情况（除非你检出的是当前分支）（即rmForFile和stagedForFile）
+     *
+     * */
+    public static void checkout01(String fileName) {
+        head = getHead();
+        if (!head.getBlobReference().containsKey(fileName)) {
+            Utils.error("File does not exist in that commit.");
+        } else {
+            String sha1 = head.getBlobReference().get(fileName);
+            byte[] bytes = Utils.getBlobFileBySha1Value(sha1);
+            Utils.writeContents(join(CWD, fileName), bytes);
+        }
+    }
+    public static void checkout02(String commitID, String fileName) {
+        head = getHead();
+        int sha1Length = commitID.length();
+        Commit tempCommit = head;
+        String fullCommitID = null;
+        if (sha1Length == 40) {
+            fullCommitID = commitID;
+            if (!join(OBJECTS_DIR, fullCommitID.substring(0, 2)).exists()) {
+                Utils.error("No commit with that id exists.");
+            }
+            if (!join(join(OBJECTS_DIR, fullCommitID.substring(0, 2)), fullCommitID.substring(2)).exists()) {
+                Utils.error("No commit with that id exists.");
+            }
+        } else {
+            ArrayList<String> commitIDList = new ArrayList<>();
+            while (tempCommit.getFirstParentString() != null) {
+                if (sha1ForCommit(tempCommit).substring(0, sha1Length).equals(commitID)) {
+                    if (commitIDList.size() != 0) {
+                        Utils.error("No commit with that id exists.");
+                    }
+                    commitIDList.add(sha1ForCommit(tempCommit));
+                }
+                tempCommit = getCommitByCommitSha1(tempCommit.getFirstParentString());
+            }
+            if (sha1ForCommit(tempCommit).substring(0, sha1Length).equals(commitID)) {
+                if (commitIDList.size() != 0) {
+                    Utils.error("No commit with that id exists.");
+                }
+                commitIDList.add(sha1ForCommit(tempCommit));
+            }
+            if (commitIDList.size() != 1) {
+                Utils.error("No commit with that id exists.");
+            }
+            fullCommitID = commitIDList.get(0);
+        }
+        Commit commit = getCommitByCommitSha1(fullCommitID);
+        if (!commit.getBlobReference().containsKey(fileName)) {
+            Utils.error("File does not exist in that commit.");
+        }
+        String sha1ForFile = commit.getBlobReference().get(fileName);
+        byte[] bytes = Utils.getBlobFileBySha1Value(sha1ForFile);
+        Utils.writeContents(join(CWD, fileName), bytes);
+
+    }
+    public static void checkout03(String branchName) {
+
     }
 
 

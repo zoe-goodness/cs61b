@@ -71,6 +71,23 @@ public class Main {
                 }
                 Repository.log();
                 break;
+            case "checkout":
+                if (args.length <= 1 || args.length >= 5) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                if (!Utils.initialized()) {
+                    System.out.println("Not in an initialized Gitlet directory.");
+                    System.exit(0);
+                }
+                if (args.length == 3) {
+                    Repository.checkout01(args[2]);
+                } else if (args.length == 4) {
+                    Repository.checkout02(args[1], args[3]);
+                } else if (args.length == 2) {
+                    Repository.checkout03(args[1]);
+                }
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

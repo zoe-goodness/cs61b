@@ -75,4 +75,5 @@ public class Commit implements Serializable {
     public void setSecondParentObject(Commit secondParentObject) {
         this.secondParentObject = secondParentObject;
     }
+
 }

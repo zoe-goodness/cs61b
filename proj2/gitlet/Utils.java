@@ -44,8 +44,9 @@ class Utils {
      * sha1ForFileNameForCWD:得到的是CWD中filename的sha1，注意是CWD，不是objects中的sha1
      * deleteStagedAreaForCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1要相同
      * deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
-     * getCommitByCommitSha1:通过给commit的sha1value，得到在objects中的这个Commit
+     * getCommitByCommitSha1:通过给commit的sha1value，得到在objects中的这个Commit,不接受这个commit不存在
      * printCommitInfo:用于log输出commit信息
+     * getBlobFileBySha1Value:根据file的sha1值得到在Objects中的file，返回的是byte数组
      */
 
 
@@ -379,5 +380,8 @@ class Utils {
         System.out.println("Date: " + sdf.format(commit.getTimestamp()));
         System.out.println(commit.getMessage());
         System.out.println();
+    }
+    static byte[] getBlobFileBySha1Value(String sha1) {
+        return readContents(join(join(Repository.OBJECTS_DIR, sha1.substring(0, 2)), sha1.substring(2)));
     }
 }
