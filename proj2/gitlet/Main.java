@@ -95,6 +95,13 @@ public class Main {
                 }
                 Repository.global_log();
                 break;
+            case "find":
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.find(args[1]);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

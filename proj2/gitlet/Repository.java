@@ -272,8 +272,22 @@ public class Repository {
             Commit commit = getCommitByCommitSha1(sha1);
             printCommitInfo(commit);
         }
-        
-    }
 
+    }
+    public static void find(String commitMessage) {
+        commitList = getCommitFile();
+        int num = 0;
+        for (int i = 0; i < commitList.size(); i++) {
+            String sha1 = commitList.get(i);
+            Commit commit = getCommitByCommitSha1(sha1);
+            if (commit.getMessage().equals(commitMessage)) {
+                num += 1;
+                System.out.println(commitMessage);
+            }
+        }
+        if (num == 0) {
+            Utils.error("Found no commit with that message.");
+        }
+    }
 
 }
