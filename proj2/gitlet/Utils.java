@@ -378,10 +378,8 @@ class Utils {
                     commit.getFirstParentString().substring(0, 7) + " " +
                     commit.getSecondParentString().substring(0, 7));
         }
-
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
-        sdf.setTimeZone(TimeZone.getDefault());
-        System.out.println("Date: " + sdf.format(commit.getTimestamp()));
+        SimpleDateFormat d = new SimpleDateFormat("E MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
+        System.out.println("Date: " + d.format(commit.getTimestamp()));
         System.out.println(commit.getMessage());
         System.out.println();
     }

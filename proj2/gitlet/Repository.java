@@ -282,11 +282,11 @@ public class Repository {
             Commit commit = getCommitByCommitSha1(sha1);
             if (commit.getMessage().equals(commitMessage)) {
                 num += 1;
-                System.out.println(commitMessage);
+                System.out.println(sha1);
             }
         }
         if (num == 0) {
-            Utils.error("Found no commit with that message.");
+            System.out.println("Found no commit with that message.");
         }
     }
 
