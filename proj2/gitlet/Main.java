@@ -88,6 +88,13 @@ public class Main {
                     Repository.checkout03(args[1]);
                 }
                 break;
+            case "global-log":
+                if (args.length != 1) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.global_log();
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

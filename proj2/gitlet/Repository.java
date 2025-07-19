@@ -26,6 +26,7 @@ public class Repository {
      */
 
     public static Commit head;
+    public static ArrayList<String> commitList = new ArrayList<>();
     /** The current working directory. */
     public static final File CWD = new File(System.getProperty("user.dir"));
     /** The .gitlet directory. */
@@ -46,9 +47,11 @@ public class Repository {
         writeCommit(initialCommit);
         head = initialCommit;
         TEMP_DIR.mkdir();
+        commitList.add(sha1ForCommit(initialCommit));
         writeHead(head);
         writeStagedForFile(stagedForFile);
         writeRmForFile(rmForFile);
+        writeCommitFile(commitList);
     }
 
     /**
@@ -155,6 +158,7 @@ public class Repository {
         head = getHead();
         rmForFile = getRmForFile();
         stagedForFile = getStagedForFile();
+        commitList = getCommitFile();
         if (rmForFile.size() == 0 && stagedForFile.size() == 0) {
             Utils.error("No changes added to the commit.");
         } else {
@@ -167,12 +171,14 @@ public class Repository {
             }
             Commit newCommit = new Commit(commitMessage, new Date(), newBlobReference, sha1ForCommit(head), null, null, null);
             writeCommit(newCommit);
+            commitList.add(sha1ForCommit(newCommit));
             rmForFile = new TreeMap<>();
             stagedForFile = new TreeMap<>();
             head = newCommit;
             writeHead(head);
             writeStagedForFile(stagedForFile);
             writeRmForFile(rmForFile);
+            writeCommitFile(commitList);
         }
     }
 
@@ -258,6 +264,15 @@ public class Repository {
     }
     public static void checkout03(String branchName) {
 
+    }
+    public static void global_log() {
+        commitList = getCommitFile();
+        for (int i = 0; i < commitList.size(); i++) {
+            String sha1 = commitList.get(i);
+            Commit commit = getCommitByCommitSha1(sha1);
+            printCommitInfo(commit);
+        }
+        
     }
 
 
