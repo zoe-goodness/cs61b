@@ -1,30 +1,27 @@
 package gitlet;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.TreeMap;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
+
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
+ *
  *  does at a high level.
  *
- *  @author TODO
+ *  @author SYX
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
+     *
      *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
      * variable is used. We've provided two examples for you.
      */
-
+    public static String currentBranch;
     public static Commit head;
     public static ArrayList<String> commitList = new ArrayList<>();
     /** The current working directory. */
@@ -35,11 +32,12 @@ public class Repository {
     public static final File OBJECTS_DIR = join(GITLET_DIR, "objects");
     public static TreeMap<String, String> stagedForFile = new TreeMap<>();
     public static TreeMap<String, String> rmForFile = new TreeMap<>();
-    /** The .gitlet/temp direcory. 包括 head信息，stagedForFile信息， rmForFile信息
+    /** The .gitlet/temp direcory. 包括 head信息，stagedForFile信息， rmForFile信息,commitList信息
      */
     public static final File TEMP_DIR = join(GITLET_DIR, "temp");
+    public static final File BRANCHES_DIR = join(GITLET_DIR, "branches");
+    //包括currentBranch信息和各个branch的信息
 
-    /* TODO: fill in the rest of this class. */
     public static void init() {
         GITLET_DIR.mkdir();
         OBJECTS_DIR.mkdir();
@@ -52,6 +50,10 @@ public class Repository {
         writeStagedForFile(stagedForFile);
         writeRmForFile(rmForFile);
         writeCommitFile(commitList);
+        BRANCHES_DIR.mkdir();
+        writeCommitBranch(head, "master");
+        currentBranch = "master";
+        writeCurrentBranch(currentBranch);
     }
 
     /**
@@ -179,6 +181,8 @@ public class Repository {
             writeStagedForFile(stagedForFile);
             writeRmForFile(rmForFile);
             writeCommitFile(commitList);
+            String currentBranchName = getCurrentBranch();
+            writeCommitBranch(head, currentBranchName);
         }
     }
 
@@ -193,19 +197,9 @@ public class Repository {
     }
 
     /**
-     * 1.java gitlet.Main checkout -- [文件名]
+     * java gitlet.Main checkout -- [文件名]
      * 从当前 head（即当前分支的最新提交）中取出指定文件的版本，放到工作目录中。
      * 如果该文件已经存在，则覆盖它。注意：此操作不会将文件加入暂存区（staging area）。
-     * 2.java gitlet.Main checkout [提交ID] -- [文件名]
-     * 从指定提交（通过 commit id 指定）中取出文件的版本，并放入工作目录，覆盖当前版本。
-     * 该文件同样不会被加入暂存区。
-     * 3.java gitlet.Main checkout [分支名]
-     * 获取指定分支head提交中的所有文件（注意这个head是类似master这种，而不是真正的head），
-     * 并把他们放在working directory中（覆盖已存在的文件版本如果存在的话）。此外，head需要指向
-     * 这个指定分支。
-     * 第三种情况的注意点：1.在当前分支中（head）跟踪（即commit指向的文件）但不存在于checkout分支中的
-     * 任何文件都将被删除
-     * 2.暂存区会被情况（除非你检出的是当前分支）（即rmForFile和stagedForFile）
      *
      * */
     public static void checkout01(String fileName) {
@@ -218,6 +212,15 @@ public class Repository {
             Utils.writeContents(join(CWD, fileName), bytes);
         }
     }
+
+    /**
+     *
+     *  java gitlet.Main checkout [提交ID] -- [文件名]
+     *从指定提交（通过 commit id 指定）中取出文件的版本，并放入工作目录，覆盖当前版本。
+     * 该文件同样不会被加入暂存区。
+     * @param commitID
+     * @param fileName
+     */
     public static void checkout02(String commitID, String fileName) {
         head = getHead();
         int sha1Length = commitID.length();
@@ -262,8 +265,44 @@ public class Repository {
         Utils.writeContents(join(CWD, fileName), bytes);
 
     }
-    public static void checkout03(String branchName) {
 
+    /**
+     * java gitlet.Main checkout [分支名]
+     * 获取指定分支head提交中的所有文件（注意这个head是类似master这种，而不是真正的head），
+     * 并把他们放在working directory中（覆盖已存在的文件版本如果存在的话）。此外，head需要指向
+     * 这个指定分支。
+     * 注意点：1.在当前分支中（head）跟踪（即commit指向的文件）但不存在于checkout分支中的任何文件都将被删除
+     * 2.暂存区会被清除（除非你检出的是当前分支）（即rmForFile和stagedForFile）
+     * @param branchName
+     */
+    public static void checkout03(String branchName) {
+        if (!join(BRANCHES_DIR, branchName).exists()) {
+            Utils.error("No such branch exists.");
+        }
+        head = getHead();
+        stagedForFile = getStagedForFile();
+        rmForFile = getRmForFile();
+        String currentBranchName = getCurrentBranch();
+        if (currentBranchName.equals(branchName)) {
+            System.out.println("No need to checkout the current branch.");
+            System.exit(0);
+        }
+        Commit commitBranch = getCommitBranch(branchName);
+        List<String> files = plainFilenamesIn(CWD);
+        for (String file : files) {
+            if (!head.getBlobReference().containsKey(file) && !stagedForFile.containsKey(file) && commitBranch.getBlobReference().containsKey(file)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+        writeAllBlobInWorkingDirectoryForCommit(commitBranch);
+        head = commitBranch;
+        writeHead(head);
+        stagedForFile = new TreeMap<>();
+        rmForFile = new TreeMap<>();
+        writeRmForFile(rmForFile);
+        writeStagedForFile(stagedForFile);
+        writeCurrentBranch(branchName);
     }
     public static void global_log() {
         commitList = getCommitFile();
@@ -289,5 +328,11 @@ public class Repository {
             System.out.println("Found no commit with that message.");
         }
     }
-
+    public static void branch(String branchName) {
+        if (join(BRANCHES_DIR, branchName).exists()) {
+            Utils.error("A branch with that name already exists.");
+        }
+        head = getHead();
+        writeCommitBranch(head, branchName);
+    }
 }

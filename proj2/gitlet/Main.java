@@ -102,6 +102,14 @@ public class Main {
                 }
                 Repository.find(args[1]);
                 break;
+            case "branch":
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.branch(args[1]);
+                break;
+
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

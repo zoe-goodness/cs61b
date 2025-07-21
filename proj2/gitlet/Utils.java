@@ -50,12 +50,13 @@ class Utils {
      * getCommitByCommitSha1:通过给commit的sha1value，得到在objects中的这个Commit,不接受这个commit不存在
      * printCommitInfo:用于log输出commit信息
      * getBlobFileBySha1Value:根据file的sha1值得到在Objects中的file，返回的是byte数组
-     *
+     * writeCommitBranch；在.gitlet/branches下写分支
+     * getCommitBranch:在.gitlet/branches下得到确保存在的分支
+     * writeAllBlobInWorkingDirectoryForCommit:把commit的所有blob都写到working directory中
+     * getCurrentBranch:得到currentBranch的commit
+     * writeCurrentBranch:写下当前分支的名字，文件名是currentBranch,文件内容是当前分支的名字
+     * getCurrentBranch:得到当前分支的内容，即当前分支的名字
      */
-
-
-
-
 
     /** The length of a complete SHA-1 UID as a hexadecimal numeral. */
     static final int UID_LENGTH = 40;
@@ -395,4 +396,75 @@ class Utils {
         return readObject(join(Repository.TEMP_DIR, "commitList"), ArrayList.class);
 
     }
+
+    /**
+     * 在.gitlet/branches下写分支
+     * @param commit
+     * @param branchName
+     */
+    static void writeCommitBranch(Commit commit, String branchName) {
+        writeObject(join(Repository.BRANCHES_DIR, branchName), commit);
+    }
+
+    /**
+     * 在.gitlet/branches下得到确保存在的分支
+     * @param branchName
+     */
+    static Commit getCommitBranch(String branchName) {
+        return readObject(join(Repository.BRANCHES_DIR, branchName), Commit.class);
+    }
+
+    /**
+     * 把commit的所有blob都写到working directory中
+     * @param commit
+     */
+    static void writeAllBlobInWorkingDirectoryForCommit(Commit commit) {
+        TreeMap<String, String> blobReference = commit.getBlobReference();
+        deleteAllContents(Repository.CWD);
+        for (String fileName : blobReference.keySet()) {
+            String sha1 = blobReference.get(fileName);
+            writeContents(join(Repository.CWD, fileName), readContents(join(join(Repository.OBJECTS_DIR, sha1.substring(0, 2)), sha1.substring(2))));
+        }
+    }
+    // 删除指定目录下的所有内容（文件和子目录）
+    public static void deleteAllContents(File dir) {
+        if (dir.exists() && dir.isDirectory()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    deleteRecursively(f);
+                }
+            }
+        }
+    }
+
+    // 递归删除一个文件或目录
+    private static void deleteRecursively(File file) {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        file.delete();
+    }
+
+    /**
+     * 在branch写下当前分支的名字，文件名是currentBranch,文件内容是当前分支的名字
+     * @param currentBranch
+     */
+    static void writeCurrentBranch(String currentBranch) {
+        writeContents(join(Repository.BRANCHES_DIR, "currentBranch"), currentBranch);
+    }
+
+    /**
+     * 得到当前分支的内容，即当前分支的名字
+     * @return
+     */
+    static String getCurrentBranch() {
+        return readContentsAsString(join(Repository.BRANCHES_DIR, "currentBranch"));
+    }
+
 }
