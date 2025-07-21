@@ -331,6 +331,7 @@ public class Repository {
     public static void branch(String branchName) {
         if (join(BRANCHES_DIR, branchName).exists()) {
             Utils.error("A branch with that name already exists.");
+            System.exit(0);
         }
         head = getHead();
         writeCommitBranch(head, branchName);

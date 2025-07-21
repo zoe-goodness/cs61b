@@ -432,6 +432,9 @@ class Utils {
             File[] files = dir.listFiles();
             if (files != null) {
                 for (File f : files) {
+                    if (f.getName().equals(".gitlet")) {
+                        continue;
+                    }
                     deleteRecursively(f);
                 }
             }
