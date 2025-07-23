@@ -356,7 +356,7 @@ public class Repository {
         rmForFile = getRmForFile();
         System.out.println("=== Branches ===");
         currentBranch = getCurrentBranch();
-        List<String> branches = plainFilenamesIn(BRANCHES_DIR);
+        List<String> branches = new ArrayList<>(plainFilenamesIn(BRANCHES_DIR));
         branches.remove("currentBranch");
         Collections.sort(branches);
         for (int i = 0; i < branches.size(); i++) {
