@@ -162,7 +162,9 @@ public class Repository {
         stagedForFile = getStagedForFile();
         commitList = getCommitFile();
         if (rmForFile.size() == 0 && stagedForFile.size() == 0) {
-            Utils.error("No changes added to the commit.");
+            System.out.println("No changes added to the commit.");
+            System.exit(0);
+
         } else {
             TreeMap<String, String> newBlobReference = new TreeMap<>(head.getBlobReference());
             for (String s : rmForFile.keySet()) {
@@ -205,7 +207,9 @@ public class Repository {
     public static void checkout01(String fileName) {
         head = getHead();
         if (!head.getBlobReference().containsKey(fileName)) {
-            Utils.error("File does not exist in that commit.");
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+
         } else {
             String sha1 = head.getBlobReference().get(fileName);
             byte[] bytes = Utils.getBlobFileBySha1Value(sha1);
@@ -229,17 +233,21 @@ public class Repository {
         if (sha1Length == 40) {
             fullCommitID = commitID;
             if (!join(OBJECTS_DIR, fullCommitID.substring(0, 2)).exists()) {
-                Utils.error("No commit with that id exists.");
+                System.out.println("No commit with that id exists.");
+                System.exit(0);
+
             }
             if (!join(join(OBJECTS_DIR, fullCommitID.substring(0, 2)), fullCommitID.substring(2)).exists()) {
-                Utils.error("No commit with that id exists.");
+                System.out.println("No commit with that id exists.");
+                System.exit(0);
             }
         } else {
             ArrayList<String> commitIDList = new ArrayList<>();
             while (tempCommit.getFirstParentString() != null) {
                 if (sha1ForCommit(tempCommit).substring(0, sha1Length).equals(commitID)) {
                     if (commitIDList.size() != 0) {
-                        Utils.error("No commit with that id exists.");
+                        System.out.println("No commit with that id exists.");
+                        System.exit(0);
                     }
                     commitIDList.add(sha1ForCommit(tempCommit));
                 }
@@ -247,18 +255,22 @@ public class Repository {
             }
             if (sha1ForCommit(tempCommit).substring(0, sha1Length).equals(commitID)) {
                 if (commitIDList.size() != 0) {
-                    Utils.error("No commit with that id exists.");
+                    System.out.println("No commit with that id exists.");
+                    System.exit(0);
                 }
                 commitIDList.add(sha1ForCommit(tempCommit));
             }
             if (commitIDList.size() != 1) {
-                Utils.error("No commit with that id exists.");
+                System.out.println("No commit with that id exists.");
+                System.exit(0);
             }
             fullCommitID = commitIDList.get(0);
         }
         Commit commit = getCommitByCommitSha1(fullCommitID);
         if (!commit.getBlobReference().containsKey(fileName)) {
-            Utils.error("File does not exist in that commit.");
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+
         }
         String sha1ForFile = commit.getBlobReference().get(fileName);
         byte[] bytes = Utils.getBlobFileBySha1Value(sha1ForFile);
@@ -277,7 +289,9 @@ public class Repository {
      */
     public static void checkout03(String branchName) {
         if (!join(BRANCHES_DIR, branchName).exists()) {
-            Utils.error("No such branch exists.");
+            System.out.println("No such branch exists.");
+            System.exit(0);
+
         }
         head = getHead();
         stagedForFile = getStagedForFile();
@@ -330,10 +344,86 @@ public class Repository {
     }
     public static void branch(String branchName) {
         if (join(BRANCHES_DIR, branchName).exists()) {
-            Utils.error("A branch with that name already exists.");
+            System.out.println("A branch with that name already exists.");
             System.exit(0);
         }
         head = getHead();
         writeCommitBranch(head, branchName);
+    }
+    public static void status() {
+        head = getHead();
+        stagedForFile = getStagedForFile();
+        rmForFile = getRmForFile();
+        System.out.println("=== Branches ===");
+        currentBranch = getCurrentBranch();
+        List<String> branches = plainFilenamesIn(BRANCHES_DIR);
+        branches.remove("currentBranch");
+        Collections.sort(branches);
+        for (int i = 0; i < branches.size(); i++) {
+            if (currentBranch.equals(branches.get(i))) {
+                System.out.println("*" + branches.get(i));
+            } else {
+                System.out.println(branches.get(i));
+            }
+        }
+        System.out.println();
+        System.out.println("=== Staged Files ===");
+        if (stagedForFile.size() != 0) {
+            for (String fileName : stagedForFile.keySet()) {
+                System.out.println(fileName);
+            }
+        }
+        System.out.println();
+        System.out.println("=== Removed Files ===");
+        if (rmForFile.size() != 0) {
+            for (String fileName : rmForFile.keySet()) {
+                System.out.println(fileName);
+            }
+        }
+        System.out.println();
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        TreeMap<String, String> tempIncludingDeletedModified = new TreeMap<>();
+//        TreeSet<String> tempNotIncludingDeletedModified = new TreeSet<>();
+        //first
+        TreeMap<String, String> blobReference = head.getBlobReference();
+        for (String fileName : blobReference.keySet()) {
+            if (join(CWD, fileName).exists() && !sha1ForFileNameForCWD(fileName).equals(blobReference.get(fileName)) && !stagedForFile.containsKey(fileName)) {
+//                System.out.println(fileName + " (modified)");
+                tempIncludingDeletedModified.put(fileName, fileName + " (modified)");
+//                tempNotIncludingDeletedModified.add(fileName);
+            } else if (!join(CWD, fileName).exists() && !rmForFile.containsKey(fileName)) {
+                //fourth
+                tempIncludingDeletedModified.put(fileName, fileName + " (deleted)");
+//                tempNotIncludingDeletedModified.add(fileName);
+            }
+        }
+        for (String fileName : stagedForFile.keySet()) {
+            //third
+            if (!join(CWD, fileName).exists()) {
+//                System.out.println(fileName + " (deleted)");
+                tempIncludingDeletedModified.put(fileName, fileName + " (deleted)");
+//                tempNotIncludingDeletedModified.add(fileName);
+            } else {
+                //second
+                if (!stagedForFile.get(fileName).equals(sha1ForFileNameForCWD(fileName))) {
+                    tempIncludingDeletedModified.put(fileName, fileName + " (modified)");
+//                    tempNotIncludingDeletedModified.add(fileName);
+                }
+            }
+        }
+        for (String fileName : tempIncludingDeletedModified.keySet()) {
+            System.out.println(tempIncludingDeletedModified.get(fileName));
+        }
+
+
+        System.out.println();
+        System.out.println("=== Untracked Files ===");
+        List<String> fileNames = plainFilenamesIn(CWD);
+        for (String fileName : fileNames) {
+            if (!head.getBlobReference().containsKey(fileName) && !stagedForFile.containsKey(fileName)) {
+                System.out.println(fileName);
+            }
+        }
+        System.out.println();
     }
 }

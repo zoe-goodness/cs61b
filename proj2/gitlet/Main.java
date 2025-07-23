@@ -83,6 +83,10 @@ public class Main {
                 if (args.length == 3) {
                     Repository.checkout01(args[2]);
                 } else if (args.length == 4) {
+                    if (!args[2].equals("--")) {
+                        System.out.println("Incorrect operands.");
+                        System.exit(0);
+                    }
                     Repository.checkout02(args[1], args[3]);
                 } else if (args.length == 2) {
                     Repository.checkout03(args[1]);
@@ -109,7 +113,13 @@ public class Main {
                 }
                 Repository.branch(args[1]);
                 break;
-
+            case "status":
+                if (args.length != 1) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.status();
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);
