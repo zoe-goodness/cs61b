@@ -426,4 +426,16 @@ public class Repository {
         }
         System.out.println();
     }
+    public static void rm_branch(String branchName) {
+        if (!join(BRANCHES_DIR, branchName).exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        currentBranch = getCurrentBranch();
+        if (currentBranch.equals(branchName)) {
+            System.out.println("Cannot remove the current branch.");
+            System.exit(0);
+        }
+        join(BRANCHES_DIR, branchName).delete();
+    }
 }
