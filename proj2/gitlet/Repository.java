@@ -450,7 +450,7 @@ public class Repository {
         String[] commitNames = join(OBJECTS_DIR, commitID.substring(0, 2)).list();
         ArrayList<String> realCommitNames = new ArrayList<>();
         for (String commitName : commitNames) {
-            if (commitName.substring(0, commitID.length() - 2).equals(commitID)) {
+            if (commitName.substring(0, commitID.length() - 2).equals(commitID.substring(2))) {
                 realCommitNames.add(commitName);
             }
         }
@@ -458,7 +458,7 @@ public class Repository {
             System.out.println("No commit with that id exists.");
             System.exit(0);
         }
-        Commit realCommit = getCommitByCommitSha1(realCommitNames.get(0));
+        Commit realCommit = getCommitByCommitSha1(commitID.substring(0, 2) + realCommitNames.get(0));
         List<String> files = plainFilenamesIn(CWD);
         for (String file : files) {
             if (!head.getBlobReference().containsKey(file)) {
@@ -478,7 +478,7 @@ public class Repository {
         }
         TreeMap<String, String> newCWDFiles = realCommit.getBlobReference();
         for (String newCWDFile : newCWDFiles.keySet()) {
-            writeContents(join(CWD, newCWDFile), readContents(join(join(newCWDFiles.get(newCWDFile).substring(0, 2)), newCWDFiles.get(newCWDFile).substring(2))));
+            writeContents(join(CWD, newCWDFile), readContents(join(join(OBJECTS_DIR, newCWDFiles.get(newCWDFile).substring(0, 2)), newCWDFiles.get(newCWDFile).substring(2))));
         }
         stagedForFile = new TreeMap<>();
         rmForFile = new TreeMap<>();
