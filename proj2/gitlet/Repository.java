@@ -450,7 +450,7 @@ public class Repository {
         String[] commitNames = join(OBJECTS_DIR, commitID.substring(0, 2)).list();
         ArrayList<String> realCommitNames = new ArrayList<>();
         for (String commitName : commitNames) {
-            if (commitName.substring(0, commitID.length()).equals(commitID)) {
+            if (commitName.substring(0, commitID.length() - 2).equals(commitID)) {
                 realCommitNames.add(commitName);
             }
         }
