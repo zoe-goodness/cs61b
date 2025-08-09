@@ -438,4 +438,54 @@ public class Repository {
         }
         join(BRANCHES_DIR, branchName).delete();
     }
+    public static void reset(String commitID) {
+        stagedForFile = getStagedForFile();
+        rmForFile = getRmForFile();
+        head = getHead();
+        currentBranch = getCurrentBranch();
+        if (!join(OBJECTS_DIR, commitID.substring(0, 2)).exists()) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        String[] commitNames = join(OBJECTS_DIR, commitID.substring(0, 2)).list();
+        ArrayList<String> realCommitNames = new ArrayList<>();
+        for (String commitName : commitNames) {
+            if (commitName.substring(0, commitID.length()).equals(commitID)) {
+                realCommitNames.add(commitName);
+            }
+        }
+        if (realCommitNames.size() != 1) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        Commit realCommit = getCommitByCommitSha1(realCommitNames.get(0));
+        List<String> files = plainFilenamesIn(CWD);
+        for (String file : files) {
+            if (!head.getBlobReference().containsKey(file)) {
+                if (!stagedForFile.containsKey(file)) {
+                    if (realCommit.getBlobReference().containsKey(file)) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        System.exit(0);
+                    }
+                }
+            }
+        }
+        File[] cwdFiles = CWD.listFiles();
+        if (cwdFiles != null) {
+            for (File cwdFile : cwdFiles) {
+                cwdFile.delete();
+            }
+        }
+        TreeMap<String, String> newCWDFiles = realCommit.getBlobReference();
+        for (String newCWDFile : newCWDFiles.keySet()) {
+            writeContents(join(CWD, newCWDFile), readContents(join(join(newCWDFiles.get(newCWDFile).substring(0, 2)), newCWDFiles.get(newCWDFile).substring(2))));
+        }
+        stagedForFile = new TreeMap<>();
+        rmForFile = new TreeMap<>();
+        writeStagedForFile(stagedForFile);
+        writeRmForFile(rmForFile);
+        head = realCommit;
+        writeHead(head);
+        writeCommitBranch(realCommit, currentBranch);
+    }
 }
