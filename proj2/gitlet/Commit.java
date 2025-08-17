@@ -39,6 +39,30 @@ public class Commit implements Serializable {
         this.secondParentString = secondParentString;
         this.secondParentObject = secondParentObject;
     }
+    public Commit() {
+
+    }
+
+    public void setBlobReference(TreeMap<String, String> blobReference) {
+        this.blobReference = blobReference;
+    }
+
+    public void setFirstParentString(String firstParentString) {
+        this.firstParentString = firstParentString;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public void setSecondParentString(String secondParentString) {
+        this.secondParentString = secondParentString;
+    }
+
 
     public Commit getFirstParentObject() {
         return firstParentObject;
