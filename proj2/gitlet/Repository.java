@@ -695,28 +695,8 @@ public class Repository {
             }
         }
         newCommit.setMessage("Merged " + branchName + " into " + currentBranchtemp + ".");
-        newCommit.setBlobReference(newCommitBlobReference);
         newCommit.setFirstParentString(sha1ForCommit(head));
         newCommit.setSecondParentString(sha1ForCommit(givenBranchCommit));
-        for (String conflictFile : conflictFiles) {
-            rm(conflictFile);
-        }
-        for (String s : rmForFile.keySet()) {
-            newCommitBlobReference.remove(s);
-        }
-        for (String s : stagedForFile.keySet()) {
-            newCommitBlobReference.put(s, stagedForFile.get(s));
-        }
-        newCommit.setTimestamp(new Date());
-        writeCommit(newCommit);
-        commitList.add(sha1ForCommit(newCommit));
-        rmForFile = new TreeMap<>();
-        stagedForFile = new TreeMap<>();
-        head = newCommit;
-        writeHead(head);
-        writeStagedForFile(stagedForFile);
-        writeRmForFile(rmForFile);
-        writeCommitFile(commitList);
         if (conflict) {
             for (String conflictFile : conflictFiles) {
                 String conflictContent = new String();
@@ -739,11 +719,27 @@ public class Repository {
                 }
                 conflictContent += ">>>>>>>\n";
                 writeContents(join(CWD, conflictFile), conflictContent);
-//                add(conflictFile);
+                stagedForFile.put(conflictFile, sha1ForFileNameForCWD(conflictFile));
             }
             System.out.println("Encountered a merge conflict.");
-//            writeStagedForFile(stagedForFile);
         }
+        for (String s : rmForFile.keySet()) {
+            newCommitBlobReference.remove(s);
+        }
+        for (String s : stagedForFile.keySet()) {
+            newCommitBlobReference.put(s, stagedForFile.get(s));
+        }
+        newCommit.setBlobReference(newCommitBlobReference);
+        newCommit.setTimestamp(new Date());
+        writeCommit(newCommit);
+        commitList.add(sha1ForCommit(newCommit));
+        rmForFile = new TreeMap<>();
+        stagedForFile = new TreeMap<>();
+        head = newCommit;
+        writeHead(head);
+        writeStagedForFile(stagedForFile);
+        writeRmForFile(rmForFile);
+        writeCommitFile(commitList);
     }
 
 }
