@@ -4,6 +4,7 @@ package gitlet;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
@@ -100,4 +101,15 @@ public class Commit implements Serializable {
         this.secondParentObject = secondParentObject;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Commit commit = (Commit) o;
+        return Objects.equals(message, commit.message) && Objects.equals(timestamp, commit.timestamp) && Objects.equals(blobReference, commit.blobReference) && Objects.equals(firstParentString, commit.firstParentString) && Objects.equals(secondParentString, commit.secondParentString);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(message, timestamp, blobReference, firstParentString, secondParentString);
+    }
 }
