@@ -510,6 +510,9 @@ public class Repository {
         String currentBranchtemp = getCurrentBranch();
         ArrayList<File> untrackedFiles = new ArrayList<>();
         for (File file : CWD.listFiles()) {
+            if (file.getName().equals(".gitlet")) {
+                continue;
+            }
             if ((!stagedForFile.containsKey(file.getName()) && !head.getBlobReference().containsKey(file.getName())) || (rmForFile.containsKey(file.getName()))) {
                 untrackedFiles.add(file);
             }
@@ -611,15 +614,15 @@ public class Repository {
                 }
             }
         }
-        //5
-        for (String fileName : branchCommitBlobReference.keySet()) {
-            if (!splittingNodeBlobReference.containsKey(fileName) && !headCommitBlobReference.containsKey(fileName)) {
-                if (untrackedFiles.contains(fileName)) {
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                    System.exit(0);
-                }
-            }
-        }
+//        //5
+//        for (String fileName : branchCommitBlobReference.keySet()) {
+//            if (!splittingNodeBlobReference.containsKey(fileName) && !headCommitBlobReference.containsKey(fileName)) {
+//                if (untrackedFiles.contains(fileName)) {
+//                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+//                    System.exit(0);
+//                }
+//            }
+//        }
         //6
         for (String fileName : splittingNodeBlobReference.keySet()) {
             if (headCommitBlobReference.containsKey(fileName) && headCommitBlobReference.get(fileName).equals(splittingNodeBlobReference.get(fileName)) && !branchCommitBlobReference.containsKey(fileName)) {
@@ -627,6 +630,16 @@ public class Repository {
                     System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                     System.exit(0);
                 }
+            }
+        }
+        for (File untrackedFile : untrackedFiles) {
+            if (branchCommitBlobReference.containsKey(untrackedFile.getName()) && !branchCommitBlobReference.get(untrackedFile.getName()).equals(sha1ForFileNameForCWD(untrackedFile.getName()))) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+            if (!branchCommitBlobReference.containsKey(untrackedFile.getName())) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
             }
         }
 
