@@ -515,9 +515,13 @@ public class Repository {
         TreeMap<String, String> branchCommitBlobReference = givenBranchCommit.getBlobReference();
         TreeMap<String, String> headCommitBlobReference = head.getBlobReference();
         Commit newCommit = new Commit();
-        TreeMap<String, String> newCommitBlobReference = getNewCommitBlob(branchName, splittingNode);
-        newCommitBlobReference = conflict(newCommit, branchName, splittingNode
-        , newCommitBlobReference);
+        TreeMap<String, String> newCommitBlobReference = getNewCommitBlob(branchName,
+                splittingNode);
+        newCommitBlobReference = conflict(newCommit, branchName, splittingNode,
+                newCommitBlobReference);
+        newCommit.setMessage("Merged " + branchName + " into " + currentBranchtemp + ".");
+        newCommit.setFirstParentString(sha1ForCommit(head));
+        newCommit.setSecondParentString(sha1ForCommit(givenBranchCommit));
         commitList = getCommitFile();
         newCommit.setBlobReference(newCommitBlobReference);
         newCommit.setTimestamp(new Date());
@@ -534,7 +538,6 @@ public class Repository {
     private static TreeMap conflict(Commit newCommit, String branchName, Commit splittingNode,
                                     TreeMap<String, String> newCommitBlobReference) {
         boolean conflict = false;
-        String currentBranchtemp = getCurrentBranch();
         Commit givenBranchCommit = getCommitBranch(branchName);
         TreeMap<String, String> splittingNodeBlobReference = splittingNode.getBlobReference();
         TreeMap<String, String> branchCommitBlobReference = givenBranchCommit.getBlobReference();
@@ -576,9 +579,6 @@ public class Repository {
                 conflictFiles.add(fileName);
             }
         }
-        newCommit.setMessage("Merged " + branchName + " into " + currentBranchtemp + ".");
-        newCommit.setFirstParentString(sha1ForCommit(head));
-        newCommit.setSecondParentString(sha1ForCommit(givenBranchCommit));
         if (conflict) {
             for (String conflictFile : conflictFiles) {
                 String conflictContent = new String();
