@@ -128,13 +128,12 @@ public class Repository {
         head = getHead();
         stagedForFile = getStagedForFile();
         rmForFile = getRmForFile();
-        if (stagedForFile.containsKey(fileName) && stagedForFile.get(fileName).equals(sha1ForFileNameForCWD(fileName))) {
+        if (stagedForFile.containsKey(fileName)) {
             //第一种情况
-            String sha1ValueForFile = stagedForFile.get(fileName);
             stagedForFile.remove(fileName);
             stagedForFile = deleteStagedAreaForCWD(fileName, stagedForFile);
             writeStagedForFile(stagedForFile);
-        } else if (head.getBlobReference().containsKey(fileName) && head.getBlobReference().get(fileName).equals(sha1ForFileNameForCWD(fileName))) {
+        } else if (head.getBlobReference().containsKey(fileName)) {
             //第二种情况
             rmForFile.put(fileName, head.getBlobReference().get(fileName));
             writeRmForFile(rmForFile);
