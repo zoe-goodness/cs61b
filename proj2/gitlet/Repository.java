@@ -505,189 +505,40 @@ public class Repository {
         head = getHead();
         rmForFile = getRmForFile();
         stagedForFile = getStagedForFile();
-        if (rmForFile.size() != 0 || stagedForFile.size() != 0) {
-            System.out.println("You have uncommitted changes.");
-            System.exit(0);
-        }
-        if (!join(BRANCHES_DIR, branchName).exists()) {
-            System.out.println("A branch with that name does not exist.");
-            System.exit(0);
-        }
+        merge01(branchName);
         String currentBranchtemp = getCurrentBranch();
-        ArrayList<File> untrackedFiles = new ArrayList<>();
-        for (File file : CWD.listFiles()) {
-            if (file.getName().equals(".gitlet")) {
-                continue;
-            }
-            if ((!stagedForFile.containsKey(file.getName())
-                    && !head.getBlobReference().containsKey(file.getName()))
-                    || (rmForFile.containsKey(file.getName()))) {
-                untrackedFiles.add(file);
-            }
-        }
         Commit branchCommit = getCommitBranch(branchName);
-        Commit splittingNode = null;
-        TreeSet<Commit> headAllCommits = new TreeSet<>();
-        Commit temp = head;
-        Queue<Commit> fringeForHead = new LinkedList<>();
-        HashSet<Commit> markedForHead = new HashSet<>();
-        fringeForHead.add(temp);
-        markedForHead.add(temp);
-        while (!fringeForHead.isEmpty()) {
-            Commit v = fringeForHead.remove();
-            if (v.getFirstParentString() != null) {
-                Commit n = getCommitByCommitSha1(v.getFirstParentString());
-                if (!markedForHead.contains(n)) {
-                    fringeForHead.add(n);
-                    markedForHead.add(n);
-                }
-            }
-            if (v.getSecondParentString() != null) {
-                Commit n = getCommitByCommitSha1(v.getSecondParentString());
-                if (!markedForHead.contains(n)) {
-                    fringeForHead.add(n);
-                    markedForHead.add(n);
-                }
-            }
-        }
-        Queue<Commit> fringeForBranch = new LinkedList<>();
-        HashSet<Commit> markedForBranch = new HashSet<>();
-        fringeForBranch.add(branchCommit);
-        markedForBranch.add(branchCommit);
-        while (!fringeForBranch.isEmpty()) {
-            Commit v = fringeForBranch.remove();
-            if (markedForHead.contains(v)) {
-                splittingNode = v;
-                break;
-            }
-            if (v.getFirstParentString() != null) {
-                Commit n = getCommitByCommitSha1(v.getFirstParentString());
-                if (markedForHead.contains(n)) {
-                    splittingNode = n;
-                    break;
-                }
-                if (!markedForBranch.contains(n)) {
-                    fringeForBranch.add(n);
-                    markedForBranch.add(n);
-                }
-            }
-            if (v.getSecondParentString() != null) {
-                Commit n = getCommitByCommitSha1(v.getSecondParentString());
-                if (markedForHead.contains(n)) {
-                    splittingNode = n;
-                    break;
-                }
-                if (!markedForBranch.contains(n)) {
-                    fringeForBranch.add(n);
-                    markedForBranch.add(n);
-                }
-            }
-        }
+        Commit splittingNode = getSplittingNode(branchName);
+        merge02(branchName, splittingNode);
         Commit givenBranchCommit = getCommitBranch(branchName);
-        if (givenBranchCommit.equals(head)) {
-            System.out.println("Cannot merge a branch with itself.");
-            System.exit(0);
-        }
-        if (splittingNode.equals(branchCommit)) {
-            System.out.println("Given branch is an ancestor of the current branch.");
-            System.exit(0);
-        }
-        if (splittingNode.equals(head)) {
-            checkout03(branchName);
-            System.out.println("Current branch fast-forwarded.");
-            writeCurrentBranch(currentBranchtemp);
-            System.exit(0);
-        }
         TreeMap<String, String> splittingNodeBlobReference = splittingNode.getBlobReference();
         TreeMap<String, String> branchCommitBlobReference = givenBranchCommit.getBlobReference();
         TreeMap<String, String> headCommitBlobReference = head.getBlobReference();
         Commit newCommit = new Commit();
-        TreeMap<String, String> newCommitBlobReference = new TreeMap<>();
-        for (String fileName : headCommitBlobReference.keySet()) {
-            if (splittingNodeBlobReference.containsKey(fileName)
-                    && splittingNodeBlobReference.get(fileName).
-                            equals(headCommitBlobReference.get(fileName))
-                    && branchCommitBlobReference.containsKey(fileName)
-                    && !branchCommitBlobReference.get(fileName).
-                            equals(headCommitBlobReference.get(fileName))) {
-                if (untrackedFiles.contains(fileName)) {
-                    System.out.println("There is an untracked file in the way;"
-                            + " delete it, or add and commit it first.");
-                    System.exit(0);
-                }
-            }
-        }
-        for (String fileName : splittingNodeBlobReference.keySet()) {
-            if (headCommitBlobReference.containsKey(fileName)
-                    && headCommitBlobReference.get(fileName).
-                    equals(splittingNodeBlobReference.get(fileName))
-                    && !branchCommitBlobReference.containsKey(fileName)) {
-                if (untrackedFiles.contains(fileName)) {
-                    System.out.println("There is an untracked file in the way; "
-                            + "delete it, or add and commit it first.");
-                    System.exit(0);
-                }
-            }
-        }
-        for (File untrackedFile : untrackedFiles) {
-            if (branchCommitBlobReference.containsKey(untrackedFile.getName())
-                    && !branchCommitBlobReference.get(untrackedFile.getName())
-                    .equals(sha1ForFileNameForCWD(untrackedFile.getName()))) {
-                System.out.println("There is an untracked file in the way; "
-                        + "delete it, or add and commit it first.");
-                System.exit(0);
-            }
-            if (!branchCommitBlobReference.containsKey(untrackedFile.getName())) {
-                System.out.println("There is an untracked file in the way;"
-                        + " delete it, or add and commit it first.");
-                System.exit(0);
-            }
-        }
-        for (String fileName : headCommitBlobReference.keySet()) {
-            if (splittingNodeBlobReference.containsKey(fileName) &&
-                    splittingNodeBlobReference.get(fileName).
-                            equals(headCommitBlobReference.get(fileName))
-                    && branchCommitBlobReference.containsKey(fileName) &&
-                    !branchCommitBlobReference.get(fileName).
-                            equals(headCommitBlobReference.get(fileName))) {
-                checkout02(sha1ForCommit(givenBranchCommit), fileName);
-                add(fileName);
-            }
-            if (splittingNodeBlobReference.containsKey(fileName) &&
-                    branchCommitBlobReference.containsKey(fileName)
-                    && branchCommitBlobReference.get(fileName).equals
-                    (splittingNodeBlobReference.get(fileName)) &&
-                    !headCommitBlobReference.get(fileName).
-                            equals(splittingNodeBlobReference.get(fileName))) {
-                newCommitBlobReference.put(fileName, branchCommitBlobReference.get(fileName));
-            }
-            if (branchCommitBlobReference.containsKey(fileName)
-                    && branchCommitBlobReference.get(fileName).
-                    equals(headCommitBlobReference.get(fileName))) {
-                newCommitBlobReference.put(fileName, branchCommitBlobReference.get(fileName));
-            }
-            if (!splittingNodeBlobReference.containsKey(fileName)
-                    && !branchCommitBlobReference.containsKey(fileName)) {
-                newCommitBlobReference.put(fileName, headCommitBlobReference.get(fileName));
-            }
-        }
-        for (String fileName : branchCommitBlobReference.keySet()) {
-            if (!splittingNodeBlobReference.containsKey(fileName)
-                    && !headCommitBlobReference.containsKey(fileName)) {
-                checkout02(sha1ForCommit(givenBranchCommit), fileName);
-                add(fileName);
-            }
-        }
-        for (String fileName : splittingNodeBlobReference.keySet()) {
-            if (headCommitBlobReference.containsKey(fileName)
-                    && headCommitBlobReference.get(fileName).
-                    equals(splittingNodeBlobReference.get(fileName)
-                    ) && !branchCommitBlobReference.containsKey(fileName)) {
-                rm(fileName);
-            }
-        }
-        boolean conflict = false;
+        TreeMap<String, String> newCommitBlobReference = getNewCommitBlob(branchName, splittingNode);
+        newCommitBlobReference = conflict(newCommit, branchName, splittingNode
+        , newCommitBlobReference);
         commitList = getCommitFile();
+        newCommit.setBlobReference(newCommitBlobReference);
+        newCommit.setTimestamp(new Date());
+        writeCommit(newCommit);
+        commitList.add(sha1ForCommit(newCommit));
+        rmForFile = new TreeMap<>();
+        stagedForFile = new TreeMap<>();
+        head = newCommit;
+        writeHead(head);
+        writeStagedForFile(stagedForFile);
+        writeRmForFile(rmForFile);
+        writeCommitFile(commitList);
+    }
+    private static TreeMap conflict(Commit newCommit, String branchName, Commit splittingNode,
+                                    TreeMap<String, String> newCommitBlobReference) {
+        boolean conflict = false;
+        String currentBranchtemp = getCurrentBranch();
+        Commit givenBranchCommit = getCommitBranch(branchName);
+        TreeMap<String, String> splittingNodeBlobReference = splittingNode.getBlobReference();
+        TreeMap<String, String> branchCommitBlobReference = givenBranchCommit.getBlobReference();
+        TreeMap<String, String> headCommitBlobReference = head.getBlobReference();
         ArrayList<String> conflictFiles = new ArrayList<>();
         for (String fileName : headCommitBlobReference.keySet()) {
             if (splittingNodeBlobReference.containsKey(fileName)
@@ -761,17 +612,209 @@ public class Repository {
         for (String s : stagedForFile.keySet()) {
             newCommitBlobReference.put(s, stagedForFile.get(s));
         }
-        newCommit.setBlobReference(newCommitBlobReference);
-        newCommit.setTimestamp(new Date());
-        writeCommit(newCommit);
-        commitList.add(sha1ForCommit(newCommit));
-        rmForFile = new TreeMap<>();
-        stagedForFile = new TreeMap<>();
-        head = newCommit;
-        writeHead(head);
-        writeStagedForFile(stagedForFile);
-        writeRmForFile(rmForFile);
-        writeCommitFile(commitList);
+        return newCommitBlobReference;
     }
+    private static TreeMap getNewCommitBlob(String branchName, Commit splittingNode) {
+        Commit givenBranchCommit = getCommitBranch(branchName);
+        TreeMap<String, String> splittingNodeBlobReference = splittingNode.getBlobReference();
+        TreeMap<String, String> branchCommitBlobReference = givenBranchCommit.getBlobReference();
+        TreeMap<String, String> headCommitBlobReference = head.getBlobReference();
+        TreeMap<String, String> newCommitBlobReference = new TreeMap<>();
+        for (String fileName : headCommitBlobReference.keySet()) {
+            if (splittingNodeBlobReference.containsKey(fileName)
+                    && splittingNodeBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))
+                    && branchCommitBlobReference.containsKey(fileName)
+                    && !branchCommitBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))) {
+                checkout02(sha1ForCommit(givenBranchCommit), fileName);
+                add(fileName);
+            }
+            if (splittingNodeBlobReference.containsKey(fileName)
+                    && branchCommitBlobReference.containsKey(fileName)
+                    && branchCommitBlobReference.get(fileName).equals
+                    (splittingNodeBlobReference.get(fileName))
+                    && !headCommitBlobReference.get(fileName).
+                    equals(splittingNodeBlobReference.get(fileName))) {
+                newCommitBlobReference.put(fileName, branchCommitBlobReference.get(fileName));
+            }
+            if (branchCommitBlobReference.containsKey(fileName)
+                    && branchCommitBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))) {
+                newCommitBlobReference.put(fileName, branchCommitBlobReference.get(fileName));
+            }
+            if (!splittingNodeBlobReference.containsKey(fileName)
+                    && !branchCommitBlobReference.containsKey(fileName)) {
+                newCommitBlobReference.put(fileName, headCommitBlobReference.get(fileName));
+            }
+        }
+        for (String fileName : branchCommitBlobReference.keySet()) {
+            if (!splittingNodeBlobReference.containsKey(fileName)
+                    && !headCommitBlobReference.containsKey(fileName)) {
+                checkout02(sha1ForCommit(givenBranchCommit), fileName);
+                add(fileName);
+            }
+        }
+        for (String fileName : splittingNodeBlobReference.keySet()) {
+            if (headCommitBlobReference.containsKey(fileName)
+                    && headCommitBlobReference.get(fileName).
+                    equals(splittingNodeBlobReference.get(fileName)
+                    ) && !branchCommitBlobReference.containsKey(fileName)) {
+                rm(fileName);
+            }
+        }
+        return newCommitBlobReference;
+    }
+    private static void merge01(String branchName) {
+        if (rmForFile.size() != 0 || stagedForFile.size() != 0) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+        if (!join(BRANCHES_DIR, branchName).exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+    }
+    private static void merge02(String branchName, Commit splittingNode) {
+        Commit branchCommit = getCommitBranch(branchName);
+        String currentBranchtemp = getCurrentBranch();
+        Commit givenBranchCommit = getCommitBranch(branchName);
+        if (givenBranchCommit.equals(head)) {
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+        if (splittingNode.equals(branchCommit)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+        if (splittingNode.equals(head)) {
+            checkout03(branchName);
+            System.out.println("Current branch fast-forwarded.");
+            writeCurrentBranch(currentBranchtemp);
+            System.exit(0);
+        }
+    }
+    private static void merge03(String branchName, Commit splittingNode) {
+        Commit givenBranchCommit = getCommitBranch(branchName);
+        String currentBranchtemp = getCurrentBranch();
+        TreeMap<String, String> splittingNodeBlobReference = splittingNode.getBlobReference();
+        TreeMap<String, String> branchCommitBlobReference = givenBranchCommit.getBlobReference();
+        TreeMap<String, String> headCommitBlobReference = head.getBlobReference();
+        ArrayList<File> untrackedFiles = new ArrayList<>();
+        for (File file : CWD.listFiles()) {
+            if (file.getName().equals(".gitlet")) {
+                continue;
+            }
+            if ((!stagedForFile.containsKey(file.getName())
+                    && !head.getBlobReference().containsKey(file.getName()))
+                    || (rmForFile.containsKey(file.getName()))) {
+                untrackedFiles.add(file);
+            }
+        }
+        for (String fileName : headCommitBlobReference.keySet()) {
+            if (splittingNodeBlobReference.containsKey(fileName)
+                    && splittingNodeBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))
+                    && branchCommitBlobReference.containsKey(fileName)
+                    && !branchCommitBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))) {
+                if (untrackedFiles.contains(fileName)) {
+                    System.out.println("There is an untracked file in the way;"
+                            + " delete it, or add and commit it first.");
+                    System.exit(0);
+                }
+            }
+        }
+        for (String fileName : splittingNodeBlobReference.keySet()) {
+            if (headCommitBlobReference.containsKey(fileName)
+                    && headCommitBlobReference.get(fileName).
+                    equals(splittingNodeBlobReference.get(fileName))
+                    && !branchCommitBlobReference.containsKey(fileName)) {
+                if (untrackedFiles.contains(fileName)) {
+                    System.out.println("There is an untracked file in the way; "
+                            + "delete it, or add and commit it first.");
+                    System.exit(0);
+                }
+            }
+        }
+        for (File untrackedFile : untrackedFiles) {
+            if (branchCommitBlobReference.containsKey(untrackedFile.getName())
+                    && !branchCommitBlobReference.get(untrackedFile.getName())
+                    .equals(sha1ForFileNameForCWD(untrackedFile.getName()))) {
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
+                System.exit(0);
+            }
+            if (!branchCommitBlobReference.containsKey(untrackedFile.getName())) {
+                System.out.println("There is an untracked file in the way;"
+                        + " delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+    }
+    private static Commit getSplittingNode(String branchName) {
+        Commit branchCommit = getCommitBranch(branchName);
+        Commit splittingNode = null;
+        TreeSet<Commit> headAllCommits = new TreeSet<>();
+        Commit temp = head;
+        Queue<Commit> fringeForHead = new LinkedList<>();
+        HashSet<Commit> markedForHead = new HashSet<>();
+        fringeForHead.add(temp);
+        markedForHead.add(temp);
+        while (!fringeForHead.isEmpty()) {
+            Commit v = fringeForHead.remove();
+            if (v.getFirstParentString() != null) {
+                Commit n = getCommitByCommitSha1(v.getFirstParentString());
+                if (!markedForHead.contains(n)) {
+                    fringeForHead.add(n);
+                    markedForHead.add(n);
+                }
+            }
+            if (v.getSecondParentString() != null) {
+                Commit n = getCommitByCommitSha1(v.getSecondParentString());
+                if (!markedForHead.contains(n)) {
+                    fringeForHead.add(n);
+                    markedForHead.add(n);
+                }
+            }
+        }
+        Queue<Commit> fringeForBranch = new LinkedList<>();
+        HashSet<Commit> markedForBranch = new HashSet<>();
+        fringeForBranch.add(branchCommit);
+        markedForBranch.add(branchCommit);
+        while (!fringeForBranch.isEmpty()) {
+            Commit v = fringeForBranch.remove();
+            if (markedForHead.contains(v)) {
+                splittingNode = v;
+                break;
+            }
+            if (v.getFirstParentString() != null) {
+                Commit n = getCommitByCommitSha1(v.getFirstParentString());
+                if (markedForHead.contains(n)) {
+                    splittingNode = n;
+                    break;
+                }
+                if (!markedForBranch.contains(n)) {
+                    fringeForBranch.add(n);
+                    markedForBranch.add(n);
+                }
+            }
+            if (v.getSecondParentString() != null) {
+                Commit n = getCommitByCommitSha1(v.getSecondParentString());
+                if (markedForHead.contains(n)) {
+                    splittingNode = n;
+                    break;
+                }
+                if (!markedForBranch.contains(n)) {
+                    fringeForBranch.add(n);
+                    markedForBranch.add(n);
+                }
+            }
+        }
+        return splittingNode;
+    }
+
+
+
 
 }
