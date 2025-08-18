@@ -690,7 +690,7 @@ public class Repository {
                 conflictFiles.add(fileName);
             }
         }
-        newCommit.setMessage("Merge " + branchName + " into " + currentBranchtemp + ".");
+        newCommit.setMessage("Merged " + branchName + " into " + currentBranchtemp + ".");
         newCommit.setBlobReference(newCommitBlobReference);
         newCommit.setFirstParentString(sha1ForCommit(head));
         newCommit.setSecondParentString(sha1ForCommit(givenBranchCommit));
