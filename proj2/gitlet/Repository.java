@@ -739,10 +739,10 @@ public class Repository {
                 }
                 conflictContent += ">>>>>>>\n";
                 writeContents(join(CWD, conflictFile), conflictContent);
-                add(conflictFile);
+//                add(conflictFile);
             }
             System.out.println("Encountered a merge conflict.");
-            writeStagedForFile(stagedForFile);
+//            writeStagedForFile(stagedForFile);
         }
     }
 
