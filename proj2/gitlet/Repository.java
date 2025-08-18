@@ -516,11 +516,24 @@ public class Repository {
         String currentBranchtemp = getCurrentBranch();
         Commit branchCommit = getCommitBranch(branchName);
         Commit splittingNode = getSplittingNode(branchName);
-        merge02(branchName, splittingNode);
         Commit givenBranchCommit = getCommitBranch(branchName);
-        TreeMap<String, String> splittingNodeBlobReference = splittingNode.getBlobReference();
-        TreeMap<String, String> branchCommitBlobReference = givenBranchCommit.getBlobReference();
-        TreeMap<String, String> headCommitBlobReference = head.getBlobReference();
+        if (givenBranchCommit.equals(head)) {
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+        if (splittingNode.equals(branchCommit)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+        if (splittingNode.equals(head)) {
+            checkout03(branchName);
+            System.out.println("Current branch fast-forwarded.");
+            writeCurrentBranch(currentBranchtemp);
+            System.exit(0);
+        }
+        if (!merge03(branchName, splittingNode)) {
+            System.exit(0);
+        }
         Commit newCommit = new Commit();
         TreeMap<String, String> newCommitBlobReference = getNewCommitBlob(branchName,
                 splittingNode);
@@ -672,26 +685,8 @@ public class Repository {
         }
         return newCommitBlobReference;
     }
-    private static void merge02(String branchName, Commit splittingNode) {
-        Commit branchCommit = getCommitBranch(branchName);
-        String currentBranchtemp = getCurrentBranch();
-        Commit givenBranchCommit = getCommitBranch(branchName);
-        if (givenBranchCommit.equals(head)) {
-            System.out.println("Cannot merge a branch with itself.");
-            System.exit(0);
-        }
-        if (splittingNode.equals(branchCommit)) {
-            System.out.println("Given branch is an ancestor of the current branch.");
-            System.exit(0);
-        }
-        if (splittingNode.equals(head)) {
-            checkout03(branchName);
-            System.out.println("Current branch fast-forwarded.");
-            writeCurrentBranch(currentBranchtemp);
-            System.exit(0);
-        }
-    }
-    private static void merge03(String branchName, Commit splittingNode) {
+
+    private static boolean merge03(String branchName, Commit splittingNode) {
         Commit givenBranchCommit = getCommitBranch(branchName);
         String currentBranchtemp = getCurrentBranch();
         TreeMap<String, String> splittingNodeBlobReference = splittingNode.getBlobReference();
@@ -718,7 +713,7 @@ public class Repository {
                 if (untrackedFiles.contains(fileName)) {
                     System.out.println("There is an untracked file in the way;"
                             + " delete it, or add and commit it first.");
-                    System.exit(0);
+                    return false;
                 }
             }
         }
@@ -730,7 +725,7 @@ public class Repository {
                 if (untrackedFiles.contains(fileName)) {
                     System.out.println("There is an untracked file in the way; "
                             + "delete it, or add and commit it first.");
-                    System.exit(0);
+                    return false;
                 }
             }
         }
@@ -740,14 +735,15 @@ public class Repository {
                     .equals(sha1ForFileNameForCWD(untrackedFile.getName()))) {
                 System.out.println("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
-                System.exit(0);
+                return false;
             }
             if (!branchCommitBlobReference.containsKey(untrackedFile.getName())) {
                 System.out.println("There is an untracked file in the way;"
                         + " delete it, or add and commit it first.");
-                System.exit(0);
+                return false;
             }
         }
+        return true;
     }
     private static Commit getSplittingNode(String branchName) {
         Commit branchCommit = getCommitBranch(branchName);
