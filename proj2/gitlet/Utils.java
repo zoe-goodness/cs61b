@@ -374,7 +374,7 @@ class Utils {
         System.out.println("===");
         System.out.println("commit " + sha1ForCommit(commit));
 
-        if (commit.getSecondParentObject() != null) {
+        if (commit.getSecondParentString() != null) {
             System.out.println("Merge: " +
                     commit.getFirstParentString().substring(0, 7) + " " +
                     commit.getSecondParentString().substring(0, 7));

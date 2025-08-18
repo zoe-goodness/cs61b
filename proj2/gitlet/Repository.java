@@ -351,6 +351,10 @@ public class Repository {
         writeCommitBranch(head, branchName);
     }
     public static void status() {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            System.exit(0);
+        }
         head = getHead();
         stagedForFile = getStagedForFile();
         rmForFile = getRmForFile();
@@ -686,7 +690,7 @@ public class Repository {
                 conflictFiles.add(fileName);
             }
         }
-        newCommit.setMessage("Merge " + branchName + " into " + currentBranch + ".");
+        newCommit.setMessage("Merge " + branchName + " into " + currentBranchtemp + ".");
         newCommit.setBlobReference(newCommitBlobReference);
         newCommit.setFirstParentString(sha1ForCommit(head));
         newCommit.setSecondParentString(sha1ForCommit(givenBranchCommit));
@@ -711,12 +715,12 @@ public class Repository {
         writeCommitFile(commitList);
         if (conflict) {
             for (String conflictFile : conflictFiles) {
-                StringBuilder conflictContent = new StringBuilder();
-                conflictContent.append("<<<<<<< HEAD");
-                conflictContent.append(getBlobFileBySha1Value(headCommitBlobReference.get(conflictFile)));
-                conflictContent.append("=======");
-                conflictContent.append(getBlobFileBySha1Value(branchCommitBlobReference.get(conflictFile)));
-                conflictContent.append(">>>>>>>");
+                String conflictContent = new String();
+                conflictContent += "<<<<<<< HEAD";
+                conflictContent += getBlobFileBySha1Value(headCommitBlobReference.get(conflictFile));
+                conflictContent += "=======";
+                conflictContent += getBlobFileBySha1Value(branchCommitBlobReference.get(conflictFile));
+                conflictContent += ">>>>>>>";
                 writeContents(join(CWD, conflictFile), conflictContent);
                 add(conflictFile);
             }
