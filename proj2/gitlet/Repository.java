@@ -22,17 +22,17 @@ public class Repository {
      * comment above them describing what that variable represents and how that
      * variable is used. We've provided two examples for you.
      */
-    public static String currentBranch;
-    public static Commit head;
-    public static ArrayList<String> commitList = new ArrayList<>();
+    private static String currentBranch;
+    private static Commit head;
+    private static ArrayList<String> commitList = new ArrayList<>();
     /** The current working directory. */
     public static final File CWD = new File(System.getProperty("user.dir"));
     /** The .gitlet directory. */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     /** The .gitlet/objects directory. */
     public static final File OBJECTS_DIR = join(GITLET_DIR, "objects");
-    public static TreeMap<String, String> stagedForFile = new TreeMap<>();
-    public static TreeMap<String, String> rmForFile = new TreeMap<>();
+    private static TreeMap<String, String> stagedForFile = new TreeMap<>();
+    private static TreeMap<String, String> rmForFile = new TreeMap<>();
     /** The .gitlet/temp direcory. 包括 head信息，stagedForFile信息， rmForFile信息,commitList信息
      */
     public static final File TEMP_DIR = join(GITLET_DIR, "temp");
@@ -42,7 +42,9 @@ public class Repository {
     public static void init() {
         GITLET_DIR.mkdir();
         OBJECTS_DIR.mkdir();
-        Commit initialCommit = new Commit("initial commit", new Date(0), new TreeMap<String, String>(), null, null, null, null);
+        Commit initialCommit = new Commit("initial commit", new Date(0),
+                new TreeMap<String, String>(), null, null,
+                null, null);
         writeCommit(initialCommit);
         head = initialCommit;
         TEMP_DIR.mkdir();
@@ -68,7 +70,8 @@ public class Repository {
      *      第一种：如果当前暂存区的filename和要加入的filename内容相同，则不做事情
      *      第二种：如果当前暂存区的filename和要加入的filename内容不同，则
      *          第一种：如果当前head没对应的filename，则把新的filename加入到暂存区，且删除之前暂存区的filename
-     *          第二种：如果当前head有对应的filename，且新的filename和head不一样，则把新的filename加入到暂存区，且删除之前暂存区的filename（和第一个一样的效果，可以一起做）
+     *          第二种：如果当前head有对应的filename，且新的filename和head不一样，则把新的filename加入到暂存区，
+     *          且删除之前暂存区的filename（和第一个一样的效果，可以一起做）
      *          第三种：如果当前head有对应的filename，且新的filename和head一样，则删除之前暂存区的filename，
      *          且不对新的做出change
      *
@@ -89,7 +92,9 @@ public class Repository {
         } else if (!stagedForFile.containsKey(fileName)) {
             //第三种情况
             //第三种情况的第二种
-            if (head.getBlobReference().containsKey(fileName) && head.getBlobReference().get(fileName).equals(sha1ForFileNameForCWD(fileName))) {
+            if (head.getBlobReference().containsKey(fileName) &&
+                    head.getBlobReference().get(fileName).
+                            equals(sha1ForFileNameForCWD(fileName))) {
                 return;
             } else {
                 //第三种情况的第一种
@@ -105,7 +110,9 @@ public class Repository {
                 return;
             } else {
                 //第四种情况的第二种情况
-                if (head.getBlobReference().containsKey(fileName) && head.getBlobReference().get(fileName).equals(sha1ForFileNameForCWD(fileName))) {
+                if (head.getBlobReference().containsKey(fileName) &&
+                        head.getBlobReference().get(fileName).
+                                equals(sha1ForFileNameForCWD(fileName))) {
                     //第四种情况的第二种情况的第三情况
                     stagedForFile = deleteStagedAreaForNotCWD(fileName, stagedForFile);
                     writeStagedForFile(stagedForFile);
@@ -174,7 +181,9 @@ public class Repository {
             for (String s : stagedForFile.keySet()) {
                 newBlobReference.put(s, stagedForFile.get(s));
             }
-            Commit newCommit = new Commit(commitMessage, new Date(), newBlobReference, sha1ForCommit(head), null, null, null);
+            Commit newCommit = new Commit(commitMessage, new Date(),
+                    newBlobReference, sha1ForCommit(head), null,
+                    null, null);
             writeCommit(newCommit);
             commitList.add(sha1ForCommit(newCommit));
             rmForFile = new TreeMap<>();
@@ -238,7 +247,8 @@ public class Repository {
                 System.exit(0);
 
             }
-            if (!join(join(OBJECTS_DIR, fullCommitID.substring(0, 2)), fullCommitID.substring(2)).exists()) {
+            if (!join(join(OBJECTS_DIR, fullCommitID.substring(0, 2)),
+                    fullCommitID.substring(2)).exists()) {
                 System.out.println("No commit with that id exists.");
                 System.exit(0);
             }
@@ -305,8 +315,11 @@ public class Repository {
         Commit commitBranch = getCommitBranch(branchName);
         List<String> files = plainFilenamesIn(CWD);
         for (String file : files) {
-            if (!head.getBlobReference().containsKey(file) && !stagedForFile.containsKey(file) && commitBranch.getBlobReference().containsKey(file)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            if (!head.getBlobReference().containsKey(file) &&
+                    !stagedForFile.containsKey(file) && commitBranch.
+                    getBlobReference().containsKey(file)) {
+                System.out.println("There is an untracked file in the way;" +
+                        " delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
@@ -392,7 +405,8 @@ public class Repository {
         //first
         TreeMap<String, String> blobReference = head.getBlobReference();
         for (String fileName : blobReference.keySet()) {
-            if (join(CWD, fileName).exists() && !sha1ForFileNameForCWD(fileName).equals(blobReference.get(fileName)) && !stagedForFile.containsKey(fileName)) {
+            if (join(CWD, fileName).exists() && !sha1ForFileNameForCWD(fileName).
+                    equals(blobReference.get(fileName)) && !stagedForFile.containsKey(fileName)) {
 //                System.out.println(fileName + " (modified)");
                 tempIncludingDeletedModified.put(fileName, fileName + " (modified)");
 //                tempNotIncludingDeletedModified.add(fileName);
@@ -425,7 +439,8 @@ public class Repository {
         System.out.println("=== Untracked Files ===");
         List<String> fileNames = plainFilenamesIn(CWD);
         for (String fileName : fileNames) {
-            if (!head.getBlobReference().containsKey(fileName) && !stagedForFile.containsKey(fileName)) {
+            if (!head.getBlobReference().containsKey(fileName) &&
+                    !stagedForFile.containsKey(fileName)) {
                 System.out.println(fileName);
             }
         }
@@ -455,7 +470,8 @@ public class Repository {
         String[] commitNames = join(OBJECTS_DIR, commitID.substring(0, 2)).list();
         ArrayList<String> realCommitNames = new ArrayList<>();
         for (String commitName : commitNames) {
-            if (commitName.substring(0, commitID.length() - 2).equals(commitID.substring(2))) {
+            if (commitName.substring(0, commitID.length() - 2).
+                    equals(commitID.substring(2))) {
                 realCommitNames.add(commitName);
             }
         }
@@ -463,13 +479,15 @@ public class Repository {
             System.out.println("No commit with that id exists.");
             System.exit(0);
         }
-        Commit realCommit = getCommitByCommitSha1(commitID.substring(0, 2) + realCommitNames.get(0));
+        Commit realCommit = getCommitByCommitSha1(commitID.substring(0, 2)
+                + realCommitNames.get(0));
         List<String> files = plainFilenamesIn(CWD);
         for (String file : files) {
             if (!head.getBlobReference().containsKey(file)) {
                 if (!stagedForFile.containsKey(file)) {
                     if (realCommit.getBlobReference().containsKey(file)) {
-                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        System.out.println("There is an untracked file in the way;" +
+                                " delete it, or add and commit it first.");
                         System.exit(0);
                     }
                 }
@@ -483,7 +501,10 @@ public class Repository {
         }
         TreeMap<String, String> newCWDFiles = realCommit.getBlobReference();
         for (String newCWDFile : newCWDFiles.keySet()) {
-            writeContents(join(CWD, newCWDFile), readContents(join(join(OBJECTS_DIR, newCWDFiles.get(newCWDFile).substring(0, 2)), newCWDFiles.get(newCWDFile).substring(2))));
+            writeContents(join(CWD, newCWDFile),
+                    readContents(join(join(OBJECTS_DIR,
+                                    newCWDFiles.get(newCWDFile).substring(0, 2)),
+                            newCWDFiles.get(newCWDFile).substring(2))));
         }
         stagedForFile = new TreeMap<>();
         rmForFile = new TreeMap<>();
@@ -513,7 +534,9 @@ public class Repository {
             if (file.getName().equals(".gitlet")) {
                 continue;
             }
-            if ((!stagedForFile.containsKey(file.getName()) && !head.getBlobReference().containsKey(file.getName())) || (rmForFile.containsKey(file.getName()))) {
+            if ((!stagedForFile.containsKey(file.getName()) &&
+                    !head.getBlobReference().containsKey(file.getName())) ||
+                    (rmForFile.containsKey(file.getName()))) {
                 untrackedFiles.add(file);
             }
         }
@@ -607,38 +630,42 @@ public class Repository {
         //然后退出。注意：这个检查要在执行任何操作之前完成。
         //1
         for (String fileName : headCommitBlobReference.keySet()) {
-            if (splittingNodeBlobReference.containsKey(fileName) && splittingNodeBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName)) && branchCommitBlobReference.containsKey(fileName) && !branchCommitBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))) {
+            if (splittingNodeBlobReference.containsKey(fileName) &&
+                    splittingNodeBlobReference.get(fileName).
+                            equals(headCommitBlobReference.get(fileName))
+                    && branchCommitBlobReference.containsKey(fileName) &&
+                    !branchCommitBlobReference.get(fileName).
+                            equals(headCommitBlobReference.get(fileName))) {
                 if (untrackedFiles.contains(fileName)) {
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way;" +
+                            " delete it, or add and commit it first.");
                     System.exit(0);
                 }
             }
         }
-//        //5
-//        for (String fileName : branchCommitBlobReference.keySet()) {
-//            if (!splittingNodeBlobReference.containsKey(fileName) && !headCommitBlobReference.containsKey(fileName)) {
-//                if (untrackedFiles.contains(fileName)) {
-//                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-//                    System.exit(0);
-//                }
-//            }
-//        }
-        //6
         for (String fileName : splittingNodeBlobReference.keySet()) {
-            if (headCommitBlobReference.containsKey(fileName) && headCommitBlobReference.get(fileName).equals(splittingNodeBlobReference.get(fileName)) && !branchCommitBlobReference.containsKey(fileName)) {
+            if (headCommitBlobReference.containsKey(fileName)
+                    && headCommitBlobReference.get(fileName).
+                    equals(splittingNodeBlobReference.get(fileName)) &&
+                    !branchCommitBlobReference.containsKey(fileName)) {
                 if (untrackedFiles.contains(fileName)) {
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; " +
+                            "delete it, or add and commit it first.");
                     System.exit(0);
                 }
             }
         }
         for (File untrackedFile : untrackedFiles) {
-            if (branchCommitBlobReference.containsKey(untrackedFile.getName()) && !branchCommitBlobReference.get(untrackedFile.getName()).equals(sha1ForFileNameForCWD(untrackedFile.getName()))) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            if (branchCommitBlobReference.containsKey(untrackedFile.getName())
+                    && !branchCommitBlobReference.get(untrackedFile.getName())
+                    .equals(sha1ForFileNameForCWD(untrackedFile.getName()))) {
+                System.out.println("There is an untracked file in the way; " +
+                        "delete it, or add and commit it first.");
                 System.exit(0);
             }
             if (!branchCommitBlobReference.containsKey(untrackedFile.getName())) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way;" +
+                        " delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
@@ -651,20 +678,33 @@ public class Repository {
 
         for (String fileName : headCommitBlobReference.keySet()) {
             //1
-            if (splittingNodeBlobReference.containsKey(fileName) && splittingNodeBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName)) && branchCommitBlobReference.containsKey(fileName) && !branchCommitBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))) {
+            if (splittingNodeBlobReference.containsKey(fileName) &&
+                    splittingNodeBlobReference.get(fileName).
+                            equals(headCommitBlobReference.get(fileName))
+                    && branchCommitBlobReference.containsKey(fileName) &&
+                    !branchCommitBlobReference.get(fileName).
+                            equals(headCommitBlobReference.get(fileName))) {
                 checkout02(sha1ForCommit(givenBranchCommit), fileName);
                 add(fileName);
             }
             //2
-            if (splittingNodeBlobReference.containsKey(fileName) && branchCommitBlobReference.containsKey(fileName) && branchCommitBlobReference.get(fileName).equals(splittingNodeBlobReference.get(fileName)) && !headCommitBlobReference.get(fileName).equals(splittingNodeBlobReference.get(fileName))) {
+            if (splittingNodeBlobReference.containsKey(fileName) &&
+                    branchCommitBlobReference.containsKey(fileName)
+                    && branchCommitBlobReference.get(fileName).equals
+                    (splittingNodeBlobReference.get(fileName)) &&
+                    !headCommitBlobReference.get(fileName).
+                            equals(splittingNodeBlobReference.get(fileName))) {
                 newCommitBlobReference.put(fileName, branchCommitBlobReference.get(fileName));
             }
             //3
-            if (branchCommitBlobReference.containsKey(fileName) && branchCommitBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))) {
+            if (branchCommitBlobReference.containsKey(fileName)
+                    && branchCommitBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))) {
                 newCommitBlobReference.put(fileName, branchCommitBlobReference.get(fileName));
             }
             //4
-            if (!splittingNodeBlobReference.containsKey(fileName) && !branchCommitBlobReference.containsKey(fileName)) {
+            if (!splittingNodeBlobReference.containsKey(fileName)
+                    && !branchCommitBlobReference.containsKey(fileName)) {
                 newCommitBlobReference.put(fileName, headCommitBlobReference.get(fileName));
             }
 
@@ -672,14 +712,18 @@ public class Repository {
         }
         //5
         for (String fileName : branchCommitBlobReference.keySet()) {
-            if (!splittingNodeBlobReference.containsKey(fileName) && !headCommitBlobReference.containsKey(fileName)) {
+            if (!splittingNodeBlobReference.containsKey(fileName)
+                    && !headCommitBlobReference.containsKey(fileName)) {
                 checkout02(sha1ForCommit(givenBranchCommit), fileName);
                 add(fileName);
             }
         }
         //6
         for (String fileName : splittingNodeBlobReference.keySet()) {
-            if (headCommitBlobReference.containsKey(fileName) && headCommitBlobReference.get(fileName).equals(splittingNodeBlobReference.get(fileName)) && !branchCommitBlobReference.containsKey(fileName)) {
+            if (headCommitBlobReference.containsKey(fileName)
+                    && headCommitBlobReference.get(fileName).
+                    equals(splittingNodeBlobReference.get(fileName)
+                    ) && !branchCommitBlobReference.containsKey(fileName)) {
                 rm(fileName);
             }
         }
@@ -689,23 +733,39 @@ public class Repository {
         ArrayList<String> conflictFiles = new ArrayList<>();
         for (String fileName : headCommitBlobReference.keySet()) {
             //两个分支都修改了文件内容，且结果不同于对方
-            if (splittingNodeBlobReference.containsKey(fileName) && !splittingNodeBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName)) && branchCommitBlobReference.containsKey(fileName) && !branchCommitBlobReference.get(fileName).equals(splittingNodeBlobReference.get(fileName)) && !branchCommitBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))) {
+            if (splittingNodeBlobReference.containsKey(fileName)
+                    && !splittingNodeBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))
+                    && branchCommitBlobReference.containsKey(fileName)
+                    && !branchCommitBlobReference.get(fileName).
+                    equals(splittingNodeBlobReference.get(fileName))
+                    && !branchCommitBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))) {
                 conflict = true;
                 conflictFiles.add(fileName);
             }
             //一个分支修改了文件，另一个分支删除了文件
-            if (splittingNodeBlobReference.containsKey(fileName) && !splittingNodeBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))&& !branchCommitBlobReference.containsKey(fileName)) {
+            if (splittingNodeBlobReference.containsKey(fileName)
+                    && !splittingNodeBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))
+                    && !branchCommitBlobReference.containsKey(fileName)) {
                 conflict = true;
                 conflictFiles.add(fileName);
             }
             //文件在分裂点（split point）中不存在，但在两个分支里都出现了，且内容不同
-            if (!splittingNodeBlobReference.containsKey(fileName) && branchCommitBlobReference.containsKey(fileName) && !branchCommitBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))) {
+            if (!splittingNodeBlobReference.containsKey(fileName)
+                    && branchCommitBlobReference.containsKey(fileName)
+                    && !branchCommitBlobReference.get(fileName).
+                    equals(headCommitBlobReference.get(fileName))) {
                 conflict = true;
                 conflictFiles.add(fileName);
             }
         }
         for (String fileName : branchCommitBlobReference.keySet()) {
-            if (splittingNodeBlobReference.containsKey(fileName) && !splittingNodeBlobReference.get(fileName).equals(branchCommitBlobReference.get(fileName)) && !headCommitBlobReference.containsKey(fileName)) {
+            if (splittingNodeBlobReference.containsKey(fileName)
+                    && !splittingNodeBlobReference.get(fileName).
+                    equals(branchCommitBlobReference.get(fileName))
+                    && !headCommitBlobReference.containsKey(fileName)) {
                 conflict = true;
                 conflictFiles.add(fileName);
             }
@@ -718,7 +778,8 @@ public class Repository {
                 String conflictContent = new String();
                 conflictContent += "<<<<<<< HEAD\n";
                 if (headCommitBlobReference.containsKey(conflictFile)) {
-                    byte[] blob = getBlobFileBySha1Value(headCommitBlobReference.get(conflictFile));
+                    byte[] blob = getBlobFileBySha1Value(headCommitBlobReference.
+                            get(conflictFile));
                     String content = new String(blob, StandardCharsets.UTF_8);
                     conflictContent += content;
                 } else {
@@ -727,7 +788,8 @@ public class Repository {
 
                 conflictContent += "=======\n";
                 if (branchCommitBlobReference.containsKey(conflictFile)) {
-                    byte[] blob = getBlobFileBySha1Value(branchCommitBlobReference.get(conflictFile));
+                    byte[] blob = getBlobFileBySha1Value(branchCommitBlobReference.
+                            get(conflictFile));
                     String content = new String(blob, StandardCharsets.UTF_8);
                     conflictContent += content;
                 } else {

@@ -45,8 +45,10 @@ class Utils {
      * getCommitOnlyFile
      * writeBlob:把Blob写入到.gitlet/objects中（即把工作目录中的filename写到.gitlet/objects中）
      * sha1ForFileNameForCWD:得到的是CWD中filename的sha1，注意是CWD，不是objects中的sha1
-     * deleteStagedAreaForCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1要相同
-     * deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
+     * deleteStagedAreaForCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）
+     * ,注意暂存区此时的filename的sha1要和cwd中filename的sha1要相同
+     * deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）
+     * ,注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
      * getCommitByCommitSha1:通过给commit的sha1value，得到在objects中的这个Commit,不接受这个commit不存在
      * printCommitInfo:用于log输出commit信息
      * getBlobFileBySha1Value:根据file的sha1值得到在Objects中的file，返回的是byte数组
@@ -194,6 +196,7 @@ class Utils {
         new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
+
                 return new File(dir, name).isFile();
             }
         };
@@ -291,7 +294,8 @@ class Utils {
     }
     //写commit
     static void writeCommit(Commit commit) {
-        File firstDirectory = join(Repository.OBJECTS_DIR, sha1ForCommitPrefix(commit));
+        File firstDirectory = join(Repository.OBJECTS_DIR,
+                sha1ForCommitPrefix(commit));
         if (!firstDirectory.exists()) {
             firstDirectory.mkdir();
         }
@@ -323,11 +327,13 @@ class Utils {
     }
     //把Blob写入到.gitlet/objects中（即把工作目录中的filename写到.gitlet/objects中）
     static void writeBlob(String fileName) {
-        String sha1ForFileName = sha1(readContentsAsString(join(Repository.CWD, fileName)));
+        String sha1ForFileName = sha1(readContentsAsString(
+                join(Repository.CWD, fileName)));
         if (!join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).exists()) {
             join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).mkdir();
         }
-        writeContents(join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)), readContents(join(Repository.CWD, fileName)));
+        writeContents(join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)),
+                sha1ForFileName.substring(2)), readContents(join(Repository.CWD, fileName)));
 
     }
 //    把Blob写入到.gitlet/objects中（即把工作目录中的filename写到.gitlet/objects中）
@@ -346,46 +352,56 @@ class Utils {
     static TreeMap deleteStagedAreaForCWD(String fileName, TreeMap stagedForFile) {
         String sha1ForFileName = sha1ForFileNameForCWD(fileName);
         stagedForFile.remove(fileName);
-        if (join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).listFiles().length == 1) {
-            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)).delete();
+        if (join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).listFiles().
+                length == 1) {
+            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)),
+                    sha1ForFileName.substring(2)).delete();
             join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).delete();
         } else {
-            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)).delete();
+            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)),
+                    sha1ForFileName.substring(2)).delete();
         }
         return stagedForFile;
     }
     //deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
-    static TreeMap deleteStagedAreaForNotCWD(String fileName, TreeMap<String, String> stagedForFile) {
+    static TreeMap deleteStagedAreaForNotCWD(String fileName,
+                                             TreeMap<String, String> stagedForFile) {
         String sha1ForFileName = stagedForFile.get(fileName);
         stagedForFile.remove(fileName);
-        if (join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).listFiles().length == 1) {
-            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)).delete();
+        if (join(Repository.OBJECTS_DIR,
+                sha1ForFileName.substring(0, 2)).listFiles().length == 1) {
+            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)),
+                    sha1ForFileName.substring(2)).delete();
             join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)).delete();
         } else {
-            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)), sha1ForFileName.substring(2)).delete();
+            join(join(Repository.OBJECTS_DIR, sha1ForFileName.substring(0, 2)),
+                    sha1ForFileName.substring(2)).delete();
         }
         return stagedForFile;
     }
 //    getCommitByCommitSha1:通过给commit的sha1value，得到在objects中的这个Commit
     static Commit getCommitByCommitSha1(String sha1) {
-        return readObject(join(join(Repository.OBJECTS_DIR, sha1.substring(0, 2)), sha1.substring(2)), Commit.class);
+        return readObject(join(join(Repository.OBJECTS_DIR,
+                sha1.substring(0, 2)), sha1.substring(2)), Commit.class);
     }
     static void printCommitInfo(Commit commit) {
         System.out.println("===");
         System.out.println("commit " + sha1ForCommit(commit));
 
         if (commit.getSecondParentString() != null) {
-            System.out.println("Merge: " +
-                    commit.getFirstParentString().substring(0, 7) + " " +
-                    commit.getSecondParentString().substring(0, 7));
+            System.out.println("Merge: "
+                    + commit.getFirstParentString().substring(0, 7) + " "
+                    + commit.getSecondParentString().substring(0, 7));
         }
-        SimpleDateFormat d = new SimpleDateFormat("E MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
+        SimpleDateFormat d = new SimpleDateFormat("E MMM dd HH:mm:ss yyyy Z",
+                Locale.ENGLISH);
         System.out.println("Date: " + d.format(commit.getTimestamp()));
         System.out.println(commit.getMessage());
         System.out.println();
     }
     static byte[] getBlobFileBySha1Value(String sha1) {
-        return readContents(join(join(Repository.OBJECTS_DIR, sha1.substring(0, 2)), sha1.substring(2)));
+        return readContents(join(join(Repository.OBJECTS_DIR, sha1.substring(0, 2)),
+                sha1.substring(2)));
     }
 //    writeCommitFile记录已经commit的sha1
     static void writeCommitFile(ArrayList<String> commitList) {
@@ -423,7 +439,9 @@ class Utils {
         deleteAllContents(Repository.CWD);
         for (String fileName : blobReference.keySet()) {
             String sha1 = blobReference.get(fileName);
-            writeContents(join(Repository.CWD, fileName), readContents(join(join(Repository.OBJECTS_DIR, sha1.substring(0, 2)), sha1.substring(2))));
+            writeContents(join(Repository.CWD, fileName),
+                    readContents(join(join(Repository.OBJECTS_DIR,
+                            sha1.substring(0, 2)), sha1.substring(2))));
         }
     }
     // 删除指定目录下的所有内容（文件和子目录）

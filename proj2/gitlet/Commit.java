@@ -31,7 +31,9 @@ public class Commit implements Serializable {
     private String secondParentString;
     private transient Commit secondParentObject;
 
-    public Commit(String message, Date timestamp, TreeMap<String, String> blobReference, String firstParentString, Commit firstParentObject, String secondParentString, Commit secondParentObject) {
+    public Commit(String message, Date timestamp, TreeMap<String, String> blobReference,
+                  String firstParentString, Commit firstParentObject,
+                  String secondParentString, Commit secondParentObject) {
         this.message = message;
         this.timestamp = timestamp;
         this.blobReference = blobReference;
@@ -103,13 +105,20 @@ public class Commit implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Commit commit = (Commit) o;
-        return Objects.equals(message, commit.message) && Objects.equals(timestamp, commit.timestamp) && Objects.equals(blobReference, commit.blobReference) && Objects.equals(firstParentString, commit.firstParentString) && Objects.equals(secondParentString, commit.secondParentString);
+        return Objects.equals(message, commit.message) &&
+                Objects.equals(timestamp, commit.timestamp) &&
+                Objects.equals(blobReference, commit.blobReference) &&
+                Objects.equals(firstParentString, commit.firstParentString) &&
+                Objects.equals(secondParentString, commit.secondParentString);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(message, timestamp, blobReference, firstParentString, secondParentString);
+        return Objects.hash(message, timestamp, blobReference, firstParentString,
+                secondParentString);
     }
 }
