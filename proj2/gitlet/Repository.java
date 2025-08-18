@@ -506,7 +506,7 @@ public class Repository {
         TreeSet<Commit> headAllCommits = new TreeSet<>();
         Commit temp = head;
         Queue<Commit> fringeForHead = new LinkedList<>();
-        TreeSet<Commit> markedForHead = new TreeSet<>();
+        HashSet<Commit> markedForHead = new HashSet<>();
         fringeForHead.add(temp);
         markedForHead.add(temp);
         while (!fringeForHead.isEmpty()) {
@@ -527,7 +527,7 @@ public class Repository {
             }
         }
         Queue<Commit> fringeForBranch = new LinkedList<>();
-        TreeSet<Commit> markedForBranch = new TreeSet<>();
+        HashSet<Commit> markedForBranch = new HashSet<>();
         fringeForBranch.add(branchCommit);
         markedForBranch.add(branchCommit);
         while (!fringeForBranch.isEmpty()) {
