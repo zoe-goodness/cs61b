@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -719,20 +720,24 @@ public class Repository {
         if (conflict) {
             for (String conflictFile : conflictFiles) {
                 String conflictContent = new String();
-                conflictContent += "<<<<<<< HEAD";
+                conflictContent += "<<<<<<< HEAD\n";
                 if (headCommitBlobReference.containsKey(conflictFile)) {
-                    conflictContent += getBlobFileBySha1Value(headCommitBlobReference.get(conflictFile));
+                    byte[] blob = getBlobFileBySha1Value(headCommitBlobReference.get(conflictFile));
+                    String content = new String(blob, StandardCharsets.UTF_8);
+                    conflictContent += content;
                 } else {
                     conflictContent += "";
                 }
 
-                conflictContent += "=======";
+                conflictContent += "=======\n";
                 if (branchCommitBlobReference.containsKey(conflictFile)) {
-                    conflictContent += getBlobFileBySha1Value(branchCommitBlobReference.get(conflictFile));
+                    byte[] blob = getBlobFileBySha1Value(branchCommitBlobReference.get(conflictFile));
+                    String content = new String(blob, StandardCharsets.UTF_8);
+                    conflictContent += content;
                 } else {
                     conflictContent += "";
                 }
-                conflictContent += ">>>>>>>";
+                conflictContent += ">>>>>>>\n";
                 writeContents(join(CWD, conflictFile), conflictContent);
                 add(conflictFile);
             }
