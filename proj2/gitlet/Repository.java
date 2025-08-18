@@ -88,7 +88,7 @@ public class Repository {
         } else if (!stagedForFile.containsKey(fileName)) {
             //第三种情况
             //第三种情况的第二种
-            if (head.getBlobReference().containsKey(fileName) && head.getBlobReference().get(fileName).equals(stagedForFile.get(fileName))) {
+            if (head.getBlobReference().containsKey(fileName) && head.getBlobReference().get(fileName).equals(sha1ForFileNameForCWD(fileName))) {
                 return;
             } else {
                 //第三种情况的第一种
@@ -157,7 +157,7 @@ public class Repository {
      * 2.新提交将成为“当前提交”，`head` 指针也会指向它。前一个 `head` 成为它的父提交。
      */
     public static void commit(String commitMessage) {
-        
+
         head = getHead();
         rmForFile = getRmForFile();
         stagedForFile = getStagedForFile();
