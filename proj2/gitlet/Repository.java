@@ -157,6 +157,7 @@ public class Repository {
      * 2.新提交将成为“当前提交”，`head` 指针也会指向它。前一个 `head` 成为它的父提交。
      */
     public static void commit(String commitMessage) {
+        
         head = getHead();
         rmForFile = getRmForFile();
         stagedForFile = getStagedForFile();

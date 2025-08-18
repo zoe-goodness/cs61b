@@ -54,6 +54,10 @@ public class Main {
                     System.out.println("Please enter a commit message.");
                     System.exit(0);
                 }
+                if (args[1].equals("")) {
+                    System.out.println("Please enter a commit message.");
+                    System.exit(0);
+                }
                 if (!Utils.initialized()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     System.exit(0);
