@@ -671,14 +671,17 @@ public class Repository {
         commitList = getCommitFile();
         ArrayList<String> conflictFiles = new ArrayList<>();
         for (String fileName : headCommitBlobReference.keySet()) {
+            //两个分支都修改了文件内容，且结果不同于对方
             if (splittingNodeBlobReference.containsKey(fileName) && !splittingNodeBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName)) && branchCommitBlobReference.containsKey(fileName) && !branchCommitBlobReference.get(fileName).equals(splittingNodeBlobReference.get(fileName)) && !branchCommitBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))) {
                 conflict = true;
                 conflictFiles.add(fileName);
             }
+            //一个分支修改了文件，另一个分支删除了文件
             if (splittingNodeBlobReference.containsKey(fileName) && !splittingNodeBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))&& !branchCommitBlobReference.containsKey(fileName)) {
                 conflict = true;
                 conflictFiles.add(fileName);
             }
+            //文件在分裂点（split point）中不存在，但在两个分支里都出现了，且内容不同
             if (!splittingNodeBlobReference.containsKey(fileName) && branchCommitBlobReference.containsKey(fileName) && !branchCommitBlobReference.get(fileName).equals(headCommitBlobReference.get(fileName))) {
                 conflict = true;
                 conflictFiles.add(fileName);
@@ -717,9 +720,18 @@ public class Repository {
             for (String conflictFile : conflictFiles) {
                 String conflictContent = new String();
                 conflictContent += "<<<<<<< HEAD";
-                conflictContent += getBlobFileBySha1Value(headCommitBlobReference.get(conflictFile));
+                if (headCommitBlobReference.containsKey(conflictFile)) {
+                    conflictContent += getBlobFileBySha1Value(headCommitBlobReference.get(conflictFile));
+                } else {
+                    conflictContent += "";
+                }
+
                 conflictContent += "=======";
-                conflictContent += getBlobFileBySha1Value(branchCommitBlobReference.get(conflictFile));
+                if (branchCommitBlobReference.containsKey(conflictFile)) {
+                    conflictContent += getBlobFileBySha1Value(branchCommitBlobReference.get(conflictFile));
+                } else {
+                    conflictContent += "";
+                }
                 conflictContent += ">>>>>>>";
                 writeContents(join(CWD, conflictFile), conflictContent);
                 add(conflictFile);
