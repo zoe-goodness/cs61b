@@ -101,7 +101,7 @@ public class Main {
                     System.out.println("Incorrect operands.");
                     System.exit(0);
                 }
-                Repository.global_log();
+                Repository.globalLog();
                 break;
             case "find":
                 if (args.length != 2) {
@@ -129,7 +129,7 @@ public class Main {
                     System.out.println("Incorrect operands.");
                     System.exit(0);
                 }
-                Repository.rm_branch(args[1]);
+                Repository.rmBranch(args[1]);
                 break;
             case "reset":
                 if (args.length != 2) {

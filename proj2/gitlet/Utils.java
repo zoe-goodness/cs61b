@@ -273,11 +273,7 @@ class Utils {
 
     /* utils for mine */
     static boolean initialized() {
-        if (Repository.GITLET_DIR.exists()) {
-            return true;
-        } else {
-            return false;
-        }
+        return Repository.GITLET_DIR.exists();
     }
 
     //    * sha1ForCommit:得到commit的sha1
@@ -348,7 +344,8 @@ class Utils {
     static String sha1ForFileNameForCWD(String fileName) {
         return sha1(readContentsAsString(join(Repository.CWD, fileName)));
     }
-    //deleteStagedAreaForCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1要相同
+    //deleteStagedAreaForCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,
+    // 注意暂存区此时的filename的sha1要和cwd中filename的sha1要相同
     static TreeMap deleteStagedAreaForCWD(String fileName, TreeMap stagedForFile) {
         String sha1ForFileName = sha1ForFileNameForCWD(fileName);
         stagedForFile.remove(fileName);
@@ -363,7 +360,8 @@ class Utils {
         }
         return stagedForFile;
     }
-    //deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
+    //deleteStagedAreaForNotCWD:删除暂存区的filename（包括stagedforfile和那个文件夹和那个文件）,
+    // 注意暂存区此时的filename的sha1要和cwd中filename的sha1是不同
     static TreeMap deleteStagedAreaForNotCWD(String fileName,
                                              TreeMap<String, String> stagedForFile) {
         String sha1ForFileName = stagedForFile.get(fileName);

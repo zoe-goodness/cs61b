@@ -109,11 +109,11 @@ public class Commit implements Serializable {
             return false;
         }
         Commit commit = (Commit) o;
-        return Objects.equals(message, commit.message) &&
-                Objects.equals(timestamp, commit.timestamp) &&
-                Objects.equals(blobReference, commit.blobReference) &&
-                Objects.equals(firstParentString, commit.firstParentString) &&
-                Objects.equals(secondParentString, commit.secondParentString);
+        return Objects.equals(message, commit.message)
+                && Objects.equals(timestamp, commit.timestamp)
+                && Objects.equals(blobReference, commit.blobReference)
+                && Objects.equals(firstParentString, commit.firstParentString)
+                && Objects.equals(secondParentString, commit.secondParentString);
     }
 
     @Override
