@@ -494,9 +494,19 @@ public class Repository {
         writeCommitBranch(realCommit, currentBranch);
     }
     public static void merge(String branchName) {
+
         head = getHead();
         rmForFile = getRmForFile();
         stagedForFile = getStagedForFile();
+        if (rmForFile.size() != 0 || stagedForFile.size() != 0) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+        if (!join(BRANCHES_DIR, branchName).exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+
         String currentBranchtemp = getCurrentBranch();
         ArrayList<File> untrackedFiles = new ArrayList<>();
         for (File file : CWD.listFiles()) {
@@ -568,14 +578,7 @@ public class Repository {
         //There is an untracked file in the way; delete it, or add and commit it first.
         //然后退出。注意：这个检查要在执行任何操作之前完成。
 
-        if (rmForFile.size() != 0 || stagedForFile.size() != 0) {
-            System.out.println("You have uncommitted changes.");
-            System.exit(0);
-        }
-        if (!join(BRANCHES_DIR, branchName).exists()) {
-            System.out.println("A branch with that name does not exist.");
-            System.exit(0);
-        }
+
         Commit givenBranchCommit = getCommitBranch(branchName);
         if (givenBranchCommit.equals(head)) {
             System.out.println("Cannot merge a branch with itself.");
