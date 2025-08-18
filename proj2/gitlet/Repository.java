@@ -505,7 +505,14 @@ public class Repository {
         head = getHead();
         rmForFile = getRmForFile();
         stagedForFile = getStagedForFile();
-        merge01(branchName);
+        if (rmForFile.size() != 0 || stagedForFile.size() != 0) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+        if (!join(BRANCHES_DIR, branchName).exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
         String currentBranchtemp = getCurrentBranch();
         Commit branchCommit = getCommitBranch(branchName);
         Commit splittingNode = getSplittingNode(branchName);
@@ -664,16 +671,6 @@ public class Repository {
             }
         }
         return newCommitBlobReference;
-    }
-    private static void merge01(String branchName) {
-        if (rmForFile.size() != 0 || stagedForFile.size() != 0) {
-            System.out.println("You have uncommitted changes.");
-            System.exit(0);
-        }
-        if (!join(BRANCHES_DIR, branchName).exists()) {
-            System.out.println("A branch with that name does not exist.");
-            System.exit(0);
-        }
     }
     private static void merge02(String branchName, Commit splittingNode) {
         Commit branchCommit = getCommitBranch(branchName);
