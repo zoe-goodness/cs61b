@@ -2,6 +2,7 @@ package byow.Core;
 
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
+import byow.TileEngine.Tileset;
 
 public class Engine {
     TERenderer ter = new TERenderer();
@@ -46,8 +47,48 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-
-        TETile[][] finalWorldFrame = null;
-        return finalWorldFrame;
+        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        world = initializeTiles(world);
+        long seed = 0;
+        input = input.toLowerCase();
+        if (input.charAt(0) == 'n') {
+            //构造世界
+            seed = extractSeed(input);
+            world = drawWorld(seed, world);
+        } else if (input.charAt(0) == 'l') {
+            //load上次世界
+            world = loadWorld();
+        }
+        return world;
     }
+
+    public TETile[][] drawWorld(long seed, TETile[][] world) {
+        return null;
+    }
+    public TETile[][] loadWorld() {
+        return null;
+    }
+
+    /**
+     * 从N###SSSSSSS中提取种子###
+     * @param input :类似N###SSSSSSS
+     * @return
+     */
+    public long extractSeed(String input) {
+        input = input.toLowerCase();
+        if (input.substring(1, input.indexOf("s")).compareTo(Long.MAX_VALUE + "") <= 0) {
+            return Long.parseLong(input.substring(1, input.indexOf("s")));
+        } else {
+            throw new RuntimeException("exceed the maximum of seed");
+        }
+    }
+    public TETile[][] initializeTiles(TETile[][] world) {
+        for (int x = 0; x < WIDTH; x += 1) {
+            for (int y = 0; y < HEIGHT; y += 1) {
+                world[x][y] = Tileset.NOTHING;
+            }
+        }
+        return world;
+    }
+
 }
