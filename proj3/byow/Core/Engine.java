@@ -4,6 +4,8 @@ import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
+import java.util.Random;
+
 public class Engine {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
@@ -63,7 +65,15 @@ public class Engine {
     }
 
     public TETile[][] drawWorld(long seed, TETile[][] world) {
-        return null;
+        Random random = new Random(seed);
+        RoomGenerator roomGenerator = new RoomGenerator();
+        int time = RandomUtils.uniform(random, 20, 25);
+        for (int i = 0; i < time; i++) {
+            roomGenerator.randomCreateRoom(random, world);
+            roomGenerator.connectRoom(roomGenerator.roomList.get(i), roomGenerator.roomList.get(i).nearestRoomList(roomGenerator.roomList), random, world);
+        }
+        WorldModifier.fillWithWall(world);
+        return world;
     }
     public TETile[][] loadWorld() {
         return null;
