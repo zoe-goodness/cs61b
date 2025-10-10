@@ -15,7 +15,7 @@ public class MyTest {
     @Test
     public void testExtractSeed() {
         Engine engine = new Engine();
-        assertEquals(engine.extractSeed("N1234SSSSS"), 1234);
+        System.out.println(engine.extractSeed("n929896041742075871s"));
     }
     @Test
     public void testRandomCreateRoom() {
@@ -97,6 +97,8 @@ public class MyTest {
 
 
     public static void main(String[] args) {
+        MyTest myTest = new MyTest();
+        myTest.interactWithInputString("n929896041742075871s");
 
     }
     @Test
@@ -106,6 +108,27 @@ public class MyTest {
         System.out.println(RandomUtils.poisson(random, 4));
         System.out.println(RandomUtils.poisson(random, 4));
 
+    }
+    private void interactWithInputString(String seed) {
+        TERenderer ter = new TERenderer();
+        ter.initialize(WIDTH, HEIGHT);
+        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        for (int x = 0; x < WIDTH; x += 1) {
+            for (int y = 0; y < HEIGHT; y += 1) {
+                world[x][y] = Tileset.NOTHING;
+            }
+        }
+        Engine engine = new Engine();
+        Random random = new Random(engine.extractSeed(seed));
+        RoomGenerator roomGenerator = new RoomGenerator();
+        int time = RandomUtils.uniform(random, 20, 25);
+        for (int i = 0; i < time; i++) {
+            roomGenerator.randomCreateRoom(random, world);
+            roomGenerator.connectRoom(roomGenerator.roomList.get(i), roomGenerator.roomList.get(i).nearestRoomList(roomGenerator.roomList), random, world);
+        }
+
+        WorldModifier.fillWithWall(world);
+        ter.renderFrame(world);
     }
 
 

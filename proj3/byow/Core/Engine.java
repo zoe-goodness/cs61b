@@ -86,7 +86,7 @@ public class Engine {
      */
     public long extractSeed(String input) {
         input = input.toLowerCase();
-        if (input.substring(1, input.indexOf("s")).compareTo(Long.MAX_VALUE + "") <= 0) {
+        if (Long.parseLong(input.substring(1, input.indexOf("s"))) < Long.MAX_VALUE) {
             return Long.parseLong(input.substring(1, input.indexOf("s")));
         } else {
             throw new RuntimeException("exceed the maximum of seed");
