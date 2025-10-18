@@ -92,6 +92,12 @@ public class Engine {
             throw new RuntimeException("exceed the maximum of seed");
         }
     }
+
+    /**
+     * 初始化世界
+     * @param world
+     * @return
+     */
     public TETile[][] initializeTiles(TETile[][] world) {
         for (int x = 0; x < WIDTH; x += 1) {
             for (int y = 0; y < HEIGHT; y += 1) {
