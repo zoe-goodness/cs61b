@@ -59,7 +59,7 @@ public class Room {
      * @return
      */
     public Position getCenter() {
-        return new Position((this.x + this.x + this.width) / 2, (this.y + this.y + this.height) / 2);
+        return new Position(this.x + this.width / 2, this.y + this.height / 2);
     }
 
 }

@@ -1,9 +1,13 @@
 package byow.Core;
 
+import byow.InputDemo.InputSource;
+import byow.InputDemo.KeyboardInputSource;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
+import edu.princeton.cs.introcs.StdDraw;
 
+import java.awt.*;
 import java.util.Random;
 
 public class Engine {
@@ -17,6 +21,25 @@ public class Engine {
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        world = initializeTiles(world);
+        showMenu();
+        InputSource inputSource = new KeyboardInputSource();
+        char c = inputSource.getNextKey();
+        long seed;
+        if (c == 'N' || c == 'n') {
+            seed = showProvideExtractSeed();
+            world = drawWorld(seed, world);
+            ter.initialize(WIDTH, HEIGHT);
+            showWorld(world);
+        } else if (c == 'L' || c == 'l') {
+            //load game
+            world = loadWorld();
+
+        } else if (c == 'Q' || c == 'q'){
+            //quit game
+            return;
+        }
 
     }
 
@@ -63,16 +86,76 @@ public class Engine {
         }
         return world;
     }
+    
+    private void createOneAvatar(TETile[][] world, Random random) {
+        while (true) {
+            int randomX = RandomUtils.uniform(random, WIDTH);
+            int randomY = RandomUtils.uniform(random, HEIGHT);
+        }
+    }
+    /**
+     * 用于interactWithKeyboard提示输入种子的页面
+     * @return 种子
+     */
+    private long showProvideExtractSeed() {
+        int menuWidth = 40;
+        int menuHeight = 40;
+        ter.initialize(40, 40);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+        StdDraw.text(menuWidth / 2, menuHeight / 2, "Provide seed");
+        StdDraw.show();
+        InputSource inputSource = new KeyboardInputSource();
+        String seed = "N";
+        while (inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'S' || c == 's') {
+                seed += c;
+                break;
+            }
+            else {
+                seed += c;
+            }
+        }
+        return extractSeed(seed);
+    }
 
+    /**
+     * 用来展示world
+     * @param world world数组
+     */
+    private void showWorld(TETile[][] world) {
+        ter.renderFrame(world);
+    }
+    
+    //用于interactWithKeyboard展示页面
+    private void showMenu() {
+        int menuWidth = 40;
+        int menuHeight = 40;
+        ter.initialize(40, 40);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+        StdDraw.text(menuWidth / 2, menuHeight / 5 * 4, "CS61B: THE GAME");
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 6, "New Game (N)");
+        StdDraw.text(menuWidth / 2, menuHeight / 2, "Load Game (L)");
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 4, "Quit (Q)");
+        StdDraw.show();
+    }
     public TETile[][] drawWorld(long seed, TETile[][] world) {
         Random random = new Random(seed);
         RoomGenerator roomGenerator = new RoomGenerator();
         int time = RandomUtils.uniform(random, 20, 25);
         for (int i = 0; i < time; i++) {
             roomGenerator.randomCreateRoom(random, world);
+
             roomGenerator.connectRoom(roomGenerator.roomList.get(i), roomGenerator.roomList.get(i).nearestRoomList(roomGenerator.roomList), random, world);
+
         }
         WorldModifier.fillWithWall(world);
+        createOneAvatar(world, random);
         return world;
     }
     public TETile[][] loadWorld() {

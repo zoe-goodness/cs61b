@@ -54,20 +54,20 @@ public class RoomGenerator {
                 }
                 break;
             }
-            boolean temp = false;
+            boolean overlap = false;
             for (Room room : roomList) {
-                if (!room.overlapRoom(newRoom)) {
-                    roomList.add(newRoom);
-                    for (int i = 0; i < roomWidth; i++) {
-                        for (int j = 0; j < roomHeight; j++) {
-                            world[roomX + i][roomY + j] = Tileset.FLOOR;
-                        }
-                    }
-                    temp = true;
-                    break;
-                }
+               if (room.overlapRoom(newRoom)) {
+                   overlap = true;
+                   break;
+               }
             }
-            if (temp) {
+            if (!overlap) {
+                roomList.add(newRoom);
+                for (int i = 0; i < roomWidth; i++) {
+                    for (int j = 0; j < roomHeight; j++) {
+                        world[roomX + i][roomY + j] = Tileset.FLOOR;
+                    }
+                }
                 break;
             }
         }
@@ -131,15 +131,16 @@ public class RoomGenerator {
         int tempX = roomAX;
         int tempY = roomAY;
         //先铺竖地板
-        for (int i = 0; i < abs(roomBY - tempY); i++) {
+        for (int i = 0; i <= Math.abs(roomBY - tempY); i++) {
             if (roomBY - tempY > 0) {
                 world[tempX][tempY + i] = Tileset.FLOOR;
             } else if (roomBY - tempY < 0) {
                 world[tempX][tempY - i] = Tileset.FLOOR;
             }
         }
+
         //再铺横地板
-        for (int i = 0; i < abs(roomBX - tempX); i++) {
+        for (int i = 0; i <= Math.abs(roomBX - tempX); i++) {
             if (roomBX - tempX > 0) {
                 world[tempX + i][roomBY] = Tileset.FLOOR;
             } else if (roomBX - tempX < 0) {
