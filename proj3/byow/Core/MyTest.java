@@ -5,6 +5,7 @@ import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -129,6 +130,12 @@ public class MyTest {
 
         WorldModifier.fillWithWall(world);
         ter.renderFrame(world);
+    }
+    @Test
+    public void testCWD() {
+        File CWD = new File(System.getProperty("user.dir"));
+
+        System.out.println(Engine.join(Engine.join(Engine.join(CWD.toString(), "byow").toString(), "Core").toString(), "world.txt"));
     }
 
 

@@ -6,8 +6,12 @@ import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
+import java.util.ArrayList;
+import java.util.List;
 
 import java.awt.*;
+import java.io.*;
+import java.nio.file.Paths;
 import java.util.Random;
 
 public class Engine {
@@ -15,6 +19,8 @@ public class Engine {
     /* Feel free to change the width and height. */
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
+    public static final File CWD = new File(System.getProperty("user.dir"));
+
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -25,21 +31,52 @@ public class Engine {
         world = initializeTiles(world);
         showMenu();
         InputSource inputSource = new KeyboardInputSource();
-        char c = inputSource.getNextKey();
         long seed;
-        if (c == 'N' || c == 'n') {
-            seed = showProvideExtractSeed();
-            world = drawWorld(seed, world);
-            ter.initialize(WIDTH, HEIGHT);
-            showWorld(world);
-        } else if (c == 'L' || c == 'l') {
-            //load game
-            world = loadWorld();
-
-        } else if (c == 'Q' || c == 'q'){
-            //quit game
-            return;
+        boolean running = true;
+        while (running && inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'N' || c == 'n') {
+                seed = showProvideExtractSeed();
+                world = drawWorld(seed, world);
+                ter.initialize(WIDTH, HEIGHT);
+                showWorld(world);
+                action(world);
+                running = false;
+                ter.initialize(40, 40);
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                StdDraw.pause(1000);
+                return;
+            } else if (c == 'L' || c == 'l') {
+                //load game
+                world = loadWorldFromFile();
+                ter.initialize(WIDTH, HEIGHT);
+                showWorld(world);
+                action(world);
+                running = false;
+                ter.initialize(40, 40);
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                StdDraw.pause(1000);
+                return;
+            } else if (c == 'Q' || c == 'q') {
+                running = false;
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                StdDraw.pause(1000);
+                return;
+            }
         }
+
 
     }
 
@@ -82,7 +119,7 @@ public class Engine {
             world = drawWorld(seed, world);
         } else if (input.charAt(0) == 'l') {
             //load上次世界
-            world = loadWorld();
+            world = loadWorldFromFile();
         }
         return world;
     }
@@ -91,7 +128,64 @@ public class Engine {
         while (true) {
             int randomX = RandomUtils.uniform(random, WIDTH);
             int randomY = RandomUtils.uniform(random, HEIGHT);
+            if (world[randomX][randomY].equals(Tileset.FLOOR)) {
+                world[randomX][randomY] = Tileset.AVATAR;
+                break;
+            }
         }
+    }
+    private void action(TETile[][] world) {
+        int avatarX = 0;
+        int avatarY = 0;
+        for (int i = 0; i < world.length; i++) {
+            for (int j = 0; j < world[0].length; j++) {
+                if (world[i][j].equals(Tileset.AVATAR)) {
+                    avatarX = i;
+                    avatarY = j;
+                }
+            }
+        }
+        InputSource inputSource = new KeyboardInputSource();
+        while (inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'W' || c == 'w') {
+                if (!world[avatarX][avatarY + 1].equals(Tileset.WALL)) {
+                    avatarY = avatarY + 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                }
+            } else if (c == 'a' || c == 'A') {
+                if (!world[avatarX - 1][avatarY].equals(Tileset.WALL)) {
+                    avatarX = avatarX - 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                }
+            } else if (c == 's' || c == 'S') {
+                if (!world[avatarX][avatarY - 1].equals(Tileset.WALL)) {
+                    avatarY = avatarY - 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                }
+            } else if (c == 'D' || c == 'd') {
+                if (!world[avatarX + 1][avatarY].equals(Tileset.WALL)) {
+                    avatarX = avatarX + 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                }
+            } else if (c == ':') {
+                //:q保存
+                if (inputSource.possibleNextInput()) {
+                    char temp = inputSource.getNextKey();
+                    if (temp == 'Q' || temp == 'q') {
+                        saveWorldToFile(world);
+                        return;
+                    }
+
+                }
+            }
+            showWorld(world);
+        }
+
     }
     /**
      * 用于interactWithKeyboard提示输入种子的页面
@@ -158,9 +252,7 @@ public class Engine {
         createOneAvatar(world, random);
         return world;
     }
-    public TETile[][] loadWorld() {
-        return null;
-    }
+
 
     /**
      * 从N###SSSSSSS中提取种子###
@@ -188,6 +280,93 @@ public class Engine {
             }
         }
         return world;
+    }
+
+    /**
+     * 把world转化为对应的Tileset的character成员变量的char二维数组，然后放在Core下的world.txt文件中
+     * @param world
+     */
+    private void saveWorldToFile(TETile[][] world) {
+        File worldFile = join(join(join(CWD.toString(), "byow").toString(), "Core").toString(), "world.txt");
+        if (!worldFile.exists()) {
+            try {
+                worldFile.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        char[][] identicalString = new char[world.length][world[0].length];
+        for (int i = 0; i < world.length; i++) {
+            for (int j = 0; j < world[0].length; j++) {
+                identicalString[i][j] = world[i][j].character();
+            }
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(worldFile));){
+            for (char[] row : identicalString) {
+                for (int j = 0; j < row.length; j++) {
+                    writer.write(row[j]); // 写当前字符
+                }
+                writer.newLine(); // 每行结束换行
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 从world.txt中得到world数组
+     * @return
+     */
+    private TETile[][] loadWorldFromFile() {
+        File worldFile = join(join(join(CWD.toString(), "byow").toString(), "Core").toString(), "world.txt");
+        List<char[]> rows = new ArrayList<char[]>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(worldFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // 直接将每行字符串转换为char数组（没有空格分隔）
+                char[] row = line.toCharArray();
+                rows.add(row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        char[][] identicalChar = rows.toArray(new char[0][]);
+        TETile[][] world = new TETile[identicalChar.length][identicalChar[0].length];
+
+        for (int i = 0; i < identicalChar.length; i++) {
+            for (int j = 0; j < identicalChar[i].length; j++) {
+                world[i][j] = charToTile(identicalChar[i][j]);
+            }
+        }
+        return world;
+    }
+    private TETile charToTile(char c) {
+        switch (c) {
+            case '@':
+                return Tileset.AVATAR;
+            case '·':
+                return Tileset.FLOOR;  // 注意：这个可能是中间点字符
+            case '#':
+                return Tileset.WALL;
+            case ' ':
+                return Tileset.NOTHING;
+            case '█':
+                return Tileset.WALL;   // 有时候墙用这个字符
+            case '▢':
+                return Tileset.FLOOR;  // 有时候地板用这个字符
+            case '•':
+                return Tileset.FLOOR;  // 或者这个点字符
+            // 添加其他你使用的tile类型
+            default:
+                System.out.println("未知字符: '" + c + "' (ASCII: " + (int) c + ")");
+                return Tileset.NOTHING;
+        }
+    }
+    /** Return the concatentation of FIRST and OTHERS into a File designator */
+    static File join(String first, String... others) {
+        return Paths.get(first, others).toFile();
     }
 
 }
