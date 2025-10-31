@@ -137,6 +137,11 @@ public class MyTest {
 
         System.out.println(Engine.join(Engine.join(Engine.join(CWD.toString(), "byow").toString(), "Core").toString(), "world.txt"));
     }
+    @Test
+    public void testStringIndexOf() {
+        String temp = "q3:q";
+        System.out.println(temp.substring(temp.indexOf("q"), temp.indexOf(":q")));
+    }
 
 
 

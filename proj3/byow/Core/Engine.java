@@ -40,7 +40,7 @@ public class Engine {
                 world = drawWorld(seed, world);
                 ter.initialize(WIDTH, HEIGHT);
                 showWorld(world);
-                action(world);
+                actionForInteract(world);
                 running = false;
                 ter.initialize(40, 40);
                 StdDraw.clear(Color.BLACK);
@@ -55,7 +55,7 @@ public class Engine {
                 world = loadWorldFromFile();
                 ter.initialize(WIDTH, HEIGHT);
                 showWorld(world);
-                action(world);
+                actionForInteract(world);
                 running = false;
                 ter.initialize(40, 40);
                 StdDraw.clear(Color.BLACK);
@@ -117,9 +117,30 @@ public class Engine {
             //构造世界
             seed = extractSeed(input);
             world = drawWorld(seed, world);
+            if (input.indexOf(":q") == -1) {
+                //没有找到:q
+                String actionSeries = input.substring(input.indexOf("s") + 1);
+                actionForInput(world, actionSeries);
+            } else {
+                //找到了:q，所以要save
+                String actionSeries = input.substring(input.indexOf("s") + 1 ,input.indexOf(":q"));
+                actionForInput(world, actionSeries);
+                saveWorldToFile(world);
+            }
+
         } else if (input.charAt(0) == 'l') {
             //load上次世界
             world = loadWorldFromFile();
+            if (input.indexOf(":q") == -1) {
+                //没有找到:q
+                String actionSeries = input.substring(input.indexOf("l") + 1);
+                actionForInput(world, actionSeries);
+            } else {
+                //找到了:q，所以要save
+                String actionSeries = input.substring(input.indexOf("l") + 1 ,input.indexOf(":q"));
+                actionForInput(world, actionSeries);
+                saveWorldToFile(world);
+            }
         }
         return world;
     }
@@ -134,7 +155,48 @@ public class Engine {
             }
         }
     }
-    private void action(TETile[][] world) {
+    private void actionForInput(TETile[][] world, String actionSeries) {
+        int avatarX = 0;
+        int avatarY = 0;
+        for (int i = 0; i < world.length; i++) {
+            for (int j = 0; j < world[0].length; j++) {
+                if (world[i][j].equals(Tileset.AVATAR)) {
+                    avatarX = i;
+                    avatarY = j;
+                }
+            }
+        }
+        for (int i = 0; i < actionSeries.length(); i++) {
+            char c = actionSeries.charAt(i);
+            if (c == 'W' || c == 'w') {
+                if (!world[avatarX][avatarY + 1].equals(Tileset.WALL)) {
+                    avatarY = avatarY + 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                }
+            } else if (c == 'a' || c == 'A') {
+                if (!world[avatarX - 1][avatarY].equals(Tileset.WALL)) {
+                    avatarX = avatarX - 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                }
+            } else if (c == 's' || c == 'S') {
+                if (!world[avatarX][avatarY - 1].equals(Tileset.WALL)) {
+                    avatarY = avatarY - 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                }
+            } else if (c == 'D' || c == 'd') {
+                if (!world[avatarX + 1][avatarY].equals(Tileset.WALL)) {
+                    avatarX = avatarX + 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                }
+            }
+        }
+
+    }
+    private void actionForInteract(TETile[][] world) {
         int avatarX = 0;
         int avatarY = 0;
         for (int i = 0; i < world.length; i++) {
