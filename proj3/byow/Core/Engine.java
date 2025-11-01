@@ -6,6 +6,8 @@ import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
+
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +22,7 @@ public class Engine {
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
     public static final File CWD = new File(System.getProperty("user.dir"));
+    public String avatarName = "default";
 
 
     /**
@@ -74,6 +77,23 @@ public class Engine {
                 StdDraw.show();
                 StdDraw.pause(1000);
                 return;
+
+            } else if (c == 'X' || c == 'x') {
+                avatarName = "";
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Please input your name");
+                StdDraw.show();
+                InputSource tempInputSource = new KeyboardInputSource();
+                while (tempInputSource.possibleNextInput()) {
+                    char tempC = inputSource.getNextKey();
+                    if (tempC == KeyEvent.VK_ENTER) {
+                        break;
+                    }
+                    avatarName += tempC;
+                }
+                showMenuNotAvatarName();
             }
         }
 
@@ -102,7 +122,7 @@ public class Engine {
      * @return the 2D TETile[][] representing the state of the world
      */
     public TETile[][] interactWithInputString(String input) {
-        // TODO: Fill out this method so that it run the engine using the input
+
         // passed in as an argument, and return a 2D tile representation of the
         // world that would have been drawn if the same inputs had been given
         // to interactWithKeyboard().
@@ -144,7 +164,7 @@ public class Engine {
         }
         return world;
     }
-    
+
     private void createOneAvatar(TETile[][] world, Random random) {
         while (true) {
             int randomX = RandomUtils.uniform(random, WIDTH);
@@ -245,6 +265,12 @@ public class Engine {
 
                 }
             }
+            double mouseX = StdDraw.mouseX();
+            double mouseY = StdDraw.mouseY();
+            StdDraw.setPenColor(Color.WHITE);
+            StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
+            StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
+            StdDraw.show();
             showWorld(world);
         }
 
@@ -270,9 +296,6 @@ public class Engine {
                 seed += c;
                 break;
             }
-            else {
-                seed += c;
-            }
         }
         return extractSeed(seed);
     }
@@ -284,9 +307,7 @@ public class Engine {
     private void showWorld(TETile[][] world) {
         ter.renderFrame(world);
     }
-    
-    //用于interactWithKeyboard展示页面
-    private void showMenu() {
+    private void showMenuNotAvatarName() {
         int menuWidth = 40;
         int menuHeight = 40;
         ter.initialize(40, 40);
@@ -300,6 +321,23 @@ public class Engine {
         StdDraw.text(menuWidth / 2, menuHeight / 10 * 4, "Quit (Q)");
         StdDraw.show();
     }
+    //用于interactWithKeyboard展示页面
+    private void showMenu() {
+        int menuWidth = 40;
+        int menuHeight = 40;
+        ter.initialize(40, 40);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+        StdDraw.text(menuWidth / 2, menuHeight / 5 * 4, "CS61B: THE GAME");
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 6, "New Game (N)");
+        StdDraw.text(menuWidth / 2, menuHeight / 2, "Load Game (L)");
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 4, "Quit (Q)");
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 3, "Give yourself a Name(X)");
+        StdDraw.show();
+    }
+
     public TETile[][] drawWorld(long seed, TETile[][] world) {
         Random random = new Random(seed);
         RoomGenerator roomGenerator = new RoomGenerator();
