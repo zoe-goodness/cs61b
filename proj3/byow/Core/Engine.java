@@ -2,6 +2,8 @@ package byow.Core;
 
 import byow.InputDemo.InputSource;
 import byow.InputDemo.KeyboardInputSource;
+import byow.Networking.BYOWClient;
+import byow.Networking.BYOWServer;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
@@ -24,7 +26,78 @@ public class Engine {
     public static final File CWD = new File(System.getProperty("user.dir"));
     public String avatarName = "default";
 
+    public void interactWithRemoteClient(String portNumber) throws IOException{
+        BYOWServer byowServer = new BYOWServer(Integer.parseInt(portNumber));
+        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        world = initializeTiles(world);
+        showMenuForServer(byowServer);
+        InputSource inputSource = new KeyboardInputSource();
+        long seed;
+        boolean running = true;
+        while (running && inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'N' || c == 'n') {
+                seed = showProvideExtractSeed();
+                world = drawWorld(seed, world);
+                ter.initialize(WIDTH, HEIGHT);
+                byowServer.sendCanvasConfig(WIDTH, HEIGHT);
+                showWorld(world);
+                actionForInteract(world);
+                running = false;
+                ter.initialize(40, 40);
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                StdDraw.pause(1000);
+                return;
+            } else if (c == 'L' || c == 'l') {
+                //load game
+                world = loadWorldFromFile();
+                ter.initialize(WIDTH, HEIGHT);
+                showWorld(world);
+                actionForInteract(world);
+                running = false;
+                ter.initialize(40, 40);
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                StdDraw.pause(1000);
+                return;
+            } else if (c == 'Q' || c == 'q') {
+                running = false;
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                StdDraw.pause(1000);
+                return;
 
+            } else if (c == 'X' || c == 'x') {
+                avatarName = "";
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Please input your name");
+                StdDraw.show();
+                InputSource tempInputSource = new KeyboardInputSource();
+                while (tempInputSource.possibleNextInput()) {
+                    char tempC = tempInputSource.getNextKey();
+                    if (tempC == KeyEvent.VK_ENTER) {
+                        break;
+                    } else if (tempC == 'm') {
+                        continue;
+                    }
+                    avatarName += tempC;
+                }
+                showMenuNotAvatarName();
+            }
+        }
+    }
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
@@ -90,6 +163,8 @@ public class Engine {
                     char tempC = tempInputSource.getNextKey();
                     if (tempC == KeyEvent.VK_ENTER) {
                         break;
+                    } else if (tempC == 'm') {
+                        continue;
                     }
                     avatarName += tempC;
                 }
@@ -98,6 +173,106 @@ public class Engine {
         }
 
 
+    }
+    private void enterNewWorld() {
+        TERenderer ter = new TERenderer();
+        ter.initialize(20, 20);
+        TETile[][] newWorld = new TETile[20][20];
+        for (int x = 0; x < 20; x += 1) {
+            for (int y = 0; y < 20; y += 1) {
+                newWorld[x][y] = Tileset.NOTHING;
+            }
+        }
+        for (int i = 4; i < 8; i++) {
+            for (int j = 4; j < 8; j++) {
+                newWorld[i][j] = Tileset.FLOOR;
+            }
+        }
+        WorldModifier.fillWithWall(newWorld);
+        newWorld[6][6] = Tileset.AVATAR;
+        Random random = new Random();
+        for (int i = 0; i < 3; i++) {
+            while (true) {
+                int coinX = RandomUtils.uniform(random, 20);
+                int coinY = RandomUtils.uniform(random, 20);
+                if (newWorld[coinX][coinY].equals(Tileset.FLOOR)) {
+                    newWorld[coinX][coinY] = Tileset.FLOWER;
+                    break;
+                }
+            }
+        }
+        ter.renderFrame(newWorld);
+        actionForNewWorld(newWorld);
+
+    }
+    private boolean exitNewWorld(TETile[][] world) {
+        int num = 0;
+        for (int i = 0; i < world.length; i++) {
+            for (int j = 0; j < world[0].length; j++) {
+                if (world[i][j].equals(Tileset.FLOWER)) {
+                    num += 1;
+                }
+            }
+        }
+        if (num == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    private void actionForNewWorld(TETile[][] world) {
+        int avatarX = 0;
+        int avatarY = 0;
+        for (int i = 0; i < world.length; i++) {
+            for (int j = 0; j < world[0].length; j++) {
+                if (world[i][j].equals(Tileset.AVATAR)) {
+                    avatarX = i;
+                    avatarY = j;
+                }
+            }
+        }
+        InputSource inputSource = new KeyboardInputSource();
+        while (inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'W' || c == 'w') {
+                if (!world[avatarX][avatarY + 1].equals(Tileset.WALL)) {
+                    avatarY = avatarY + 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                    if (exitNewWorld(world)) {
+                        break;
+                    }
+                }
+            } else if (c == 'a' || c == 'A') {
+                if (!world[avatarX - 1][avatarY].equals(Tileset.WALL)) {
+                    avatarX = avatarX - 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                    if (exitNewWorld(world)) {
+                        break;
+                    }
+                }
+            } else if (c == 's' || c == 'S') {
+                if (!world[avatarX][avatarY - 1].equals(Tileset.WALL)) {
+                    avatarY = avatarY - 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                    if (exitNewWorld(world)) {
+                        break;
+                    }
+                }
+            } else if (c == 'D' || c == 'd') {
+                if (!world[avatarX + 1][avatarY].equals(Tileset.WALL)) {
+                    avatarX = avatarX + 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                    if (exitNewWorld(world)) {
+                        break;
+                    }
+                }
+            }
+            showWorld(world);
+        }
     }
 
     /**
@@ -141,6 +316,7 @@ public class Engine {
                 //没有找到:q
                 String actionSeries = input.substring(input.indexOf("s") + 1);
                 actionForInput(world, actionSeries);
+
             } else {
                 //找到了:q，所以要save
                 String actionSeries = input.substring(input.indexOf("s") + 1 ,input.indexOf(":q"));
@@ -193,6 +369,7 @@ public class Engine {
                     avatarY = avatarY + 1;
                     world[avatarX][avatarY] = Tileset.AVATAR;
                     world[avatarX][avatarY - 1] = Tileset.FLOOR;
+
                 }
             } else if (c == 'a' || c == 'A') {
                 if (!world[avatarX - 1][avatarY].equals(Tileset.WALL)) {
@@ -232,27 +409,65 @@ public class Engine {
             char c = inputSource.getNextKey();
             if (c == 'W' || c == 'w') {
                 if (!world[avatarX][avatarY + 1].equals(Tileset.WALL)) {
-                    avatarY = avatarY + 1;
-                    world[avatarX][avatarY] = Tileset.AVATAR;
-                    world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                    if (world[avatarX][avatarY + 1].equals(Tileset.MOUNTAIN)) {
+                        avatarY = avatarY + 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                        enterNewWorld();
+                        ter.initialize(WIDTH, HEIGHT);
+                        ter.renderFrame(world);
+                    } else {
+
+                        avatarY = avatarY + 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                    }
                 }
             } else if (c == 'a' || c == 'A') {
                 if (!world[avatarX - 1][avatarY].equals(Tileset.WALL)) {
-                    avatarX = avatarX - 1;
-                    world[avatarX][avatarY] = Tileset.AVATAR;
-                    world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                    if (world[avatarX - 1][avatarY].equals(Tileset.MOUNTAIN)) {
+                        avatarX = avatarX - 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                        enterNewWorld();
+                        ter.initialize(WIDTH, HEIGHT);
+                        ter.renderFrame(world);
+                    } else {
+                        avatarX = avatarX - 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                    }
                 }
             } else if (c == 's' || c == 'S') {
                 if (!world[avatarX][avatarY - 1].equals(Tileset.WALL)) {
-                    avatarY = avatarY - 1;
-                    world[avatarX][avatarY] = Tileset.AVATAR;
-                    world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                    if (world[avatarX][avatarY - 1].equals(Tileset.MOUNTAIN)) {
+                        avatarY = avatarY - 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                        enterNewWorld();
+                        ter.initialize(WIDTH, HEIGHT);
+                        ter.renderFrame(world);
+
+                    } else {
+                        avatarY = avatarY - 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                    }
                 }
             } else if (c == 'D' || c == 'd') {
                 if (!world[avatarX + 1][avatarY].equals(Tileset.WALL)) {
-                    avatarX = avatarX + 1;
-                    world[avatarX][avatarY] = Tileset.AVATAR;
-                    world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                    if (world[avatarX + 1][avatarY].equals(Tileset.MOUNTAIN)) {
+                        avatarX = avatarX + 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                        enterNewWorld();
+                        ter.initialize(WIDTH, HEIGHT);
+                        ter.renderFrame(world);
+                    } else {
+                        avatarX = avatarX + 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                    }
                 }
             } else if (c == ':') {
                 //:q保存
@@ -260,11 +475,19 @@ public class Engine {
                     while (true) {
                         char temp = inputSource.getNextKey();
                         if (temp == 'm') {
-                            continue;
+                            double mouseX = StdDraw.mouseX();
+                            double mouseY = StdDraw.mouseY();
+                            StdDraw.setPenColor(Color.WHITE);
+                            StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
+                            StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
+                            StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 8, avatarName);
+                            StdDraw.show();
                         }
                         else if (temp == 'Q' || temp == 'q') {
                             saveWorldToFile(world);
                             return;
+                        } else {
+                            break;
                         }
                     }
 
@@ -278,6 +501,7 @@ public class Engine {
                 StdDraw.setPenColor(Color.WHITE);
                 StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
                 StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
+                StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 8, avatarName);
                 StdDraw.show();
             }
             showWorld(world);
@@ -349,6 +573,22 @@ public class Engine {
         StdDraw.text(menuWidth / 2, menuHeight / 10 * 3, "Give yourself a Name(X)");
         StdDraw.show();
     }
+    private void showMenuForServer(BYOWServer byowServer) {
+        int menuWidth = 40;
+        int menuHeight = 40;
+        ter.initialize(40, 40);
+        byowServer.sendCanvasConfig(menuWidth, menuHeight);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+        StdDraw.text(menuWidth / 2, menuHeight / 5 * 4, "CS61B: THE GAME");
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 6, "New Game (N)");
+        StdDraw.text(menuWidth / 2, menuHeight / 2, "Load Game (L)");
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 4, "Quit (Q)");
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 3, "Give yourself a Name(X)");
+        StdDraw.show();
+    }
 
     public TETile[][] drawWorld(long seed, TETile[][] world) {
         Random random = new Random(seed);
@@ -362,7 +602,18 @@ public class Engine {
         }
         WorldModifier.fillWithWall(world);
         createOneAvatar(world, random);
+        createOneMountain(world, random);
         return world;
+    }
+    private void createOneMountain(TETile[][] world, Random random) {
+        while (true) {
+            int mountainX = RandomUtils.uniform(random, WIDTH);
+            int mountainY = RandomUtils.uniform(random, HEIGHT);
+            if (world[mountainX][mountainY].equals(Tileset.FLOOR)) {
+                world[mountainX][mountainY] = Tileset.MOUNTAIN;
+                break;
+            }
+        }
     }
 
 
@@ -464,17 +715,12 @@ public class Engine {
                 return Tileset.WALL;
             case ' ':
                 return Tileset.NOTHING;
-            case '█':
-                return Tileset.WALL;   // 有时候墙用这个字符
-            case '▢':
-                return Tileset.FLOOR;  // 有时候地板用这个字符
-            case '•':
-                return Tileset.FLOOR;  // 或者这个点字符
-            // 添加其他你使用的tile类型
-            default:
-                System.out.println("未知字符: '" + c + "' (ASCII: " + (int) c + ")");
-                return Tileset.NOTHING;
+            case '❀':
+                return Tileset.FLOWER;
+            case '▲':
+                return Tileset.MOUNTAIN;
         }
+        return null;
     }
     /** Return the concatentation of FIRST and OTHERS into a File designator */
     static File join(String first, String... others) {
