@@ -3,10 +3,10 @@ package byow.Core;
 import java.util.List;
 
 public class Room {
-    public int x; //左下角横坐标
-    public int y; //左下角纵坐标
-    public int width; //宽度
-    public int height; //高度
+    private int x; //左下角横坐标
+    private int y; //左下角纵坐标
+    private int width; //宽度
+    private int height; //高度
     public Room(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
