@@ -87,7 +87,7 @@ public class Engine {
                 StdDraw.show();
                 InputSource tempInputSource = new KeyboardInputSource();
                 while (tempInputSource.possibleNextInput()) {
-                    char tempC = inputSource.getNextKey();
+                    char tempC = tempInputSource.getNextKey();
                     if (tempC == KeyEvent.VK_ENTER) {
                         break;
                     }
@@ -257,20 +257,29 @@ public class Engine {
             } else if (c == ':') {
                 //:q保存
                 if (inputSource.possibleNextInput()) {
-                    char temp = inputSource.getNextKey();
-                    if (temp == 'Q' || temp == 'q') {
-                        saveWorldToFile(world);
-                        return;
+                    while (true) {
+                        char temp = inputSource.getNextKey();
+                        if (temp == 'm') {
+                            continue;
+                        }
+                        else if (temp == 'Q' || temp == 'q') {
+                            saveWorldToFile(world);
+                            return;
+                        }
                     }
+
 
                 }
             }
-            double mouseX = StdDraw.mouseX();
-            double mouseY = StdDraw.mouseY();
-            StdDraw.setPenColor(Color.WHITE);
-            StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
-            StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
-            StdDraw.show();
+            else if (c == 'm') {
+                // mouse hud
+                double mouseX = StdDraw.mouseX();
+                double mouseY = StdDraw.mouseY();
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
+                StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
+                StdDraw.show();
+            }
             showWorld(world);
         }
 
@@ -295,6 +304,9 @@ public class Engine {
             if (c == 'S' || c == 's') {
                 seed += c;
                 break;
+            }
+            else if (c != 'm'){
+                seed += c;
             }
         }
         return extractSeed(seed);

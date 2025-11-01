@@ -20,6 +20,10 @@ public class KeyboardInputSource implements InputSource {
                 }
                 return c;
             }
+            else {
+                //mouse hud
+                return 'm';
+            }
         }
     }
 
