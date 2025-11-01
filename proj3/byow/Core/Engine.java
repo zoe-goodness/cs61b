@@ -39,7 +39,7 @@ public class Engine {
             if (c == 'N' || c == 'n') {
                 seed = showProvideExtractSeed();
                 world = drawWorld(seed, world);
-                ter.initialize(WIDTH, HEIGHT);
+                ter.initialize(WIDTH + 20, HEIGHT + 20);
                 byowServer.sendCanvasConfig(WIDTH, HEIGHT);
                 ter.renderFrame(world);
                 byowServer.sendCanvas();
@@ -59,7 +59,7 @@ public class Engine {
             } else if (c == 'L' || c == 'l') {
                 //load game
                 world = loadWorldFromFile();
-                ter.initialize(WIDTH, HEIGHT);
+                ter.initialize(WIDTH + 20, HEIGHT + 20);
                 byowServer.sendCanvasConfig(WIDTH, HEIGHT);
                 ter.renderFrame(world);
                 byowServer.sendCanvas();
@@ -126,7 +126,7 @@ public class Engine {
             if (c == 'N' || c == 'n') {
                 seed = showProvideExtractSeed();
                 world = drawWorld(seed, world);
-                ter.initialize(WIDTH, HEIGHT);
+                ter.initialize(WIDTH + 20, HEIGHT + 20);
                 showWorld(world);
                 actionForInteract(world);
                 running = false;
@@ -141,7 +141,7 @@ public class Engine {
             } else if (c == 'L' || c == 'l') {
                 //load game
                 world = loadWorldFromFile();
-                ter.initialize(WIDTH, HEIGHT);
+                ter.initialize(WIDTH + 20, HEIGHT + 20);
                 showWorld(world);
                 actionForInteract(world);
                 running = false;
@@ -529,7 +529,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX][avatarY - 1] = Tileset.FLOOR;
                         enterNewWorldForServer(byowServer);
-                        ter.initialize(WIDTH, HEIGHT);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
                         byowServer.sendCanvasConfig(WIDTH, HEIGHT);
                         ter.renderFrame(world);
                         byowServer.sendCanvas();
@@ -547,7 +547,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX + 1][avatarY] = Tileset.FLOOR;
                         enterNewWorldForServer(byowServer);
-                        ter.initialize(WIDTH, HEIGHT);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
                         byowServer.sendCanvasConfig(WIDTH, HEIGHT);
                         ter.renderFrame(world);
                         byowServer.sendCanvas();
@@ -564,7 +564,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX][avatarY + 1] = Tileset.FLOOR;
                         enterNewWorldForServer(byowServer);
-                        ter.initialize(WIDTH, HEIGHT);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
                         byowServer.sendCanvasConfig(WIDTH, HEIGHT);
                         ter.renderFrame(world);
                         byowServer.sendCanvas();
@@ -582,7 +582,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX - 1][avatarY] = Tileset.FLOOR;
                         enterNewWorldForServer(byowServer);
-                        ter.initialize(WIDTH, HEIGHT);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
                         byowServer.sendCanvasConfig(WIDTH, HEIGHT);
                         ter.renderFrame(world);
                         byowServer.sendCanvas();
@@ -601,9 +601,9 @@ public class Engine {
                             double mouseX = StdDraw.mouseX();
                             double mouseY = StdDraw.mouseY();
                             StdDraw.setPenColor(Color.WHITE);
-                            StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
-                            StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
-                            StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 8, avatarName);
+                            StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+                            StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
+                            StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
                             StdDraw.show();
                             byowServer.sendCanvas();
                         }
@@ -623,9 +623,9 @@ public class Engine {
                 double mouseX = StdDraw.mouseX();
                 double mouseY = StdDraw.mouseY();
                 StdDraw.setPenColor(Color.WHITE);
-                StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
-                StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
-                StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 8, avatarName);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+                StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
+                StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
                 StdDraw.show();
                 byowServer.sendCanvas();
             }
@@ -655,7 +655,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX][avatarY - 1] = Tileset.FLOOR;
                         enterNewWorld();
-                        ter.initialize(WIDTH, HEIGHT);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
                         ter.renderFrame(world);
                     } else {
 
@@ -671,7 +671,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX + 1][avatarY] = Tileset.FLOOR;
                         enterNewWorld();
-                        ter.initialize(WIDTH, HEIGHT);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
                         ter.renderFrame(world);
                     } else {
                         avatarX = avatarX - 1;
@@ -686,7 +686,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX][avatarY + 1] = Tileset.FLOOR;
                         enterNewWorld();
-                        ter.initialize(WIDTH, HEIGHT);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
                         ter.renderFrame(world);
 
                     } else {
@@ -702,7 +702,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX - 1][avatarY] = Tileset.FLOOR;
                         enterNewWorld();
-                        ter.initialize(WIDTH, HEIGHT);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
                         ter.renderFrame(world);
                     } else {
                         avatarX = avatarX + 1;
@@ -719,9 +719,9 @@ public class Engine {
                             double mouseX = StdDraw.mouseX();
                             double mouseY = StdDraw.mouseY();
                             StdDraw.setPenColor(Color.WHITE);
-                            StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
-                            StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
-                            StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 8, avatarName);
+                            StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+                            StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
+                            StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
                             StdDraw.show();
                         }
                         else if (temp == 'Q' || temp == 'q') {
@@ -740,9 +740,9 @@ public class Engine {
                 double mouseX = StdDraw.mouseX();
                 double mouseY = StdDraw.mouseY();
                 StdDraw.setPenColor(Color.WHITE);
-                StdDraw.setFont(new Font("Monaco", Font.BOLD, 10));
-                StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 9, world[(int)mouseX][(int)mouseY].description());
-                StdDraw.text(world.length / 10.0, world[0].length / 10.0 * 8, avatarName);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+                StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
+                StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
                 StdDraw.show();
             }
             showWorld(world);
@@ -772,6 +772,12 @@ public class Engine {
             }
             else if (c != 'm'){
                 seed += c;
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(menuWidth / 2, menuHeight / 2, "Provide seed");
+                StdDraw.text(menuWidth / 2, menuHeight / 5.0 * 2, seed.substring(1));
+                StdDraw.show();
             }
         }
         return extractSeed(seed);
