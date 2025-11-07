@@ -2,6 +2,8 @@ package byow.Core;
 
 import byow.InputDemo.InputSource;
 import byow.InputDemo.KeyboardInputSource;
+import byow.InputDemo.KeyboardInputSourceServer;
+import byow.Networking.BYOWServer;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
@@ -643,5 +645,392 @@ public class Engine {
     static File join(String first, String... others) {
         return Paths.get(first, others).toFile();
     }
+
+
+
+
+
+
+    public void interactWithRemoteClient(String port) throws IOException{
+        BYOWServer byowServer = new BYOWServer(Integer.parseInt(port));
+
+        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        world = initializeTiles(world);
+        showMenuForServer(byowServer);
+        KeyboardInputSourceServer inputSource = new KeyboardInputSourceServer(byowServer);
+        long seed;
+        boolean running = true;
+        while (running && inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'N' || c == 'n') {
+                seed = showProvideExtractSeedForServer(byowServer);
+                world = drawWorld(seed, world);
+                ter.initialize(WIDTH + 20, HEIGHT + 20);
+                byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
+                showWorldForServer(world, byowServer);
+                actionForInteractForServer(world, byowServer);
+                running = false;
+                ter.initialize(40, 40);
+                byowServer.sendCanvasConfig(40 * 16, 40 * 16);
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                byowServer.sendCanvas();
+                StdDraw.pause(1000);
+                return;
+            } else if (c == 'L' || c == 'l') {
+                //load game
+                world = loadWorldFromFile();
+                ter.initialize(WIDTH + 20, HEIGHT + 20);
+                byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
+                showWorldForServer(world, byowServer);
+                actionForInteractForServer(world, byowServer);
+                running = false;
+                ter.initialize(40, 40);
+                byowServer.sendCanvasConfig(40 * 16, 40 * 16);
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                byowServer.sendCanvas();
+                StdDraw.pause(1000);
+                return;
+            } else if (c == 'Q' || c == 'q') {
+                running = false;
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Game exited. Goodbye!");
+                StdDraw.show();
+                byowServer.sendCanvas();
+                StdDraw.pause(1000);
+                return;
+
+            } else if (c == 'X' || c == 'x') {
+                avatarName = "";
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(40 / 2.0, 40 / 2.0, "Please input your name");
+                StdDraw.show();
+                byowServer.sendCanvas();
+                KeyboardInputSourceServer tempInputSource = new KeyboardInputSourceServer(byowServer);
+                while (tempInputSource.possibleNextInput()) {
+                    char tempC = tempInputSource.getNextKey();
+                    if (tempC == KeyEvent.VK_ENTER) {
+                        break;
+                    } else if (tempC == 'm') {
+                        continue;
+                    }
+                    avatarName += tempC;
+                }
+                showMenuNotAvatarNameForServer(byowServer);
+            }
+        }
+        byowServer.stopConnection();
+    }
+    private void enterNewWorldForServer(BYOWServer byowServer) {
+        ter.initialize(20, 20);
+        byowServer.sendCanvasConfig(20 * 16, 20 * 16);
+        TETile[][] newWorld = new TETile[20][20];
+        for (int x = 0; x < 20; x += 1) {
+            for (int y = 0; y < 20; y += 1) {
+                newWorld[x][y] = Tileset.NOTHING;
+            }
+        }
+        for (int i = 4; i < 8; i++) {
+            for (int j = 4; j < 8; j++) {
+                newWorld[i][j] = Tileset.FLOOR;
+            }
+        }
+        WorldModifier.fillWithWall(newWorld);
+        newWorld[6][6] = Tileset.AVATAR;
+        Random random = new Random();
+        for (int i = 0; i < 3; i++) {
+            while (true) {
+                int coinX = RandomUtils.uniform(random, 20);
+                int coinY = RandomUtils.uniform(random, 20);
+                if (newWorld[coinX][coinY].equals(Tileset.FLOOR)) {
+                    newWorld[coinX][coinY] = Tileset.FLOWER;
+                    break;
+                }
+            }
+        }
+        ter.renderFrame(newWorld);
+        byowServer.sendCanvas();
+        actionForNewWorldForServer(newWorld, byowServer);
+
+    }
+    private void actionForNewWorldForServer(TETile[][] world, BYOWServer byowServer) {
+        int avatarX = 0;
+        int avatarY = 0;
+        for (int i = 0; i < world.length; i++) {
+            for (int j = 0; j < world[0].length; j++) {
+                if (world[i][j].equals(Tileset.AVATAR)) {
+                    avatarX = i;
+                    avatarY = j;
+                }
+            }
+        }
+        KeyboardInputSourceServer inputSource = new KeyboardInputSourceServer(byowServer);
+        while (inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'W' || c == 'w') {
+                if (!world[avatarX][avatarY + 1].equals(Tileset.WALL)) {
+                    avatarY = avatarY + 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                    if (exitNewWorld(world)) {
+                        break;
+                    }
+                }
+            } else if (c == 'a' || c == 'A') {
+                if (!world[avatarX - 1][avatarY].equals(Tileset.WALL)) {
+                    avatarX = avatarX - 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                    if (exitNewWorld(world)) {
+                        break;
+                    }
+                }
+            } else if (c == 's' || c == 'S') {
+                if (!world[avatarX][avatarY - 1].equals(Tileset.WALL)) {
+                    avatarY = avatarY - 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                    if (exitNewWorld(world)) {
+                        break;
+                    }
+                }
+            } else if (c == 'D' || c == 'd') {
+                if (!world[avatarX + 1][avatarY].equals(Tileset.WALL)) {
+                    avatarX = avatarX + 1;
+                    world[avatarX][avatarY] = Tileset.AVATAR;
+                    world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                    if (exitNewWorld(world)) {
+                        break;
+                    }
+                }
+            }
+            showWorldForServer(world, byowServer);
+        }
+    }
+
+
+
+
+    private void actionForInteractForServer(TETile[][] world, BYOWServer byowServer) {
+        int avatarX = 0;
+        int avatarY = 0;
+        for (int i = 0; i < world.length; i++) {
+            for (int j = 0; j < world[0].length; j++) {
+                if (world[i][j].equals(Tileset.AVATAR)) {
+                    avatarX = i;
+                    avatarY = j;
+                }
+            }
+        }
+        KeyboardInputSourceServer inputSource = new KeyboardInputSourceServer(byowServer);
+        while (inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'W' || c == 'w') {
+                if (!world[avatarX][avatarY + 1].equals(Tileset.WALL)) {
+                    if (world[avatarX][avatarY + 1].equals(Tileset.MOUNTAIN)) {
+                        avatarY = avatarY + 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                        enterNewWorldForServer(byowServer);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
+                        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
+                        ter.renderFrame(world);
+                        byowServer.sendCanvas();
+                    } else {
+
+                        avatarY = avatarY + 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX][avatarY - 1] = Tileset.FLOOR;
+                    }
+                }
+            } else if (c == 'a' || c == 'A') {
+                if (!world[avatarX - 1][avatarY].equals(Tileset.WALL)) {
+                    if (world[avatarX - 1][avatarY].equals(Tileset.MOUNTAIN)) {
+                        avatarX = avatarX - 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                        enterNewWorldForServer(byowServer);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
+                        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
+                        ter.renderFrame(world);
+                        byowServer.sendCanvas();
+                    } else {
+                        avatarX = avatarX - 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX + 1][avatarY] = Tileset.FLOOR;
+                    }
+                }
+            } else if (c == 's' || c == 'S') {
+                if (!world[avatarX][avatarY - 1].equals(Tileset.WALL)) {
+                    if (world[avatarX][avatarY - 1].equals(Tileset.MOUNTAIN)) {
+                        avatarY = avatarY - 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                        enterNewWorldForServer(byowServer);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
+                        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
+                        ter.renderFrame(world);
+                        byowServer.sendCanvas();
+
+                    } else {
+                        avatarY = avatarY - 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX][avatarY + 1] = Tileset.FLOOR;
+                    }
+                }
+            } else if (c == 'D' || c == 'd') {
+                if (!world[avatarX + 1][avatarY].equals(Tileset.WALL)) {
+                    if (world[avatarX + 1][avatarY].equals(Tileset.MOUNTAIN)) {
+                        avatarX = avatarX + 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                        enterNewWorldForServer(byowServer);
+                        ter.initialize(WIDTH + 20, HEIGHT + 20);
+                        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
+                        ter.renderFrame(world);
+                        byowServer.sendCanvas();
+                    } else {
+                        avatarX = avatarX + 1;
+                        world[avatarX][avatarY] = Tileset.AVATAR;
+                        world[avatarX - 1][avatarY] = Tileset.FLOOR;
+                    }
+                }
+            } else if (c == ':') {
+                //:q保存
+                if (inputSource.possibleNextInput()) {
+                    while (true) {
+                        char temp = inputSource.getNextKey();
+                        if (temp == 'm') {
+                            double mouseX = StdDraw.mouseX();
+                            double mouseY = StdDraw.mouseY();
+                            StdDraw.setPenColor(Color.WHITE);
+                            StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+                            StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
+                            StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
+                            StdDraw.show();
+                            byowServer.sendCanvas();
+                        }
+                        else if (temp == 'Q' || temp == 'q') {
+                            saveWorldToFile(world);
+                            return;
+                        } else {
+                            break;
+                        }
+                    }
+
+
+                }
+            }
+            else if (c == 'm') {
+                // mouse hud
+                double mouseX = StdDraw.mouseX();
+                double mouseY = StdDraw.mouseY();
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+                StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
+                StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
+                StdDraw.show();
+                byowServer.sendCanvas();
+            }
+            showWorldForServer(world, byowServer);
+        }
+
+    }
+    /**
+     * 用于interactWithKeyboard提示输入种子的页面
+     * @return 种子
+     */
+    private long showProvideExtractSeedForServer(BYOWServer byowServer) {
+        int menuWidth = 40;
+        int menuHeight = 40;
+        ter.initialize(40, 40);
+        byowServer.sendCanvasConfig(40 * 16, 40 * 16);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+        StdDraw.text(menuWidth / 2, menuHeight / 2, "Provide seed");
+        StdDraw.show();
+        byowServer.sendCanvas();
+        KeyboardInputSourceServer inputSource = new KeyboardInputSourceServer(byowServer);
+        String seed = "N";
+        while (inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'S' || c == 's') {
+                seed += c;
+                break;
+            }
+            else if (c != 'm'){
+                seed += c;
+                StdDraw.clear(Color.BLACK);
+                StdDraw.setPenColor(Color.WHITE);
+                StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+                StdDraw.text(menuWidth / 2, menuHeight / 2, "Provide seed");
+                StdDraw.text(menuWidth / 2, menuHeight / 5.0 * 2, seed.substring(1));
+                StdDraw.show();
+                byowServer.sendCanvas();
+            }
+        }
+        return extractSeed(seed);
+    }
+
+    /**
+     * 用来展示world
+     * @param world world数组
+     */
+    private void showWorldForServer(TETile[][] world, BYOWServer byowServer) {
+
+        ter.renderFrame(world);
+        byowServer.sendCanvas();
+    }
+    private void showMenuNotAvatarNameForServer(BYOWServer byowServer) {
+        int menuWidth = 40;
+        int menuHeight = 40;
+        ter.initialize(40, 40);
+        byowServer.sendCanvasConfig(40 * 16, 40 * 16);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+        StdDraw.text(menuWidth / 2, menuHeight / 5 * 4, "CS61B: THE GAME");
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 6, "New Game (N)");
+        StdDraw.text(menuWidth / 2, menuHeight / 2, "Load Game (L)");
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 4, "Quit (Q)");
+        StdDraw.show();
+        byowServer.sendCanvas();
+    }
+    //用于interactWithKeyboard展示页面
+    private void showMenuForServer(BYOWServer byowServer) {
+        int menuWidth = 40;
+        int menuHeight = 40;
+        ter.initialize(40, 40);
+        byowServer.sendCanvasConfig(40 * 16, 40 * 16);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
+        StdDraw.text(menuWidth / 2, menuHeight / 5 * 4, "CS61B: THE GAME");
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 6, "New Game (N)");
+        StdDraw.text(menuWidth / 2, menuHeight / 2, "Load Game (L)");
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 4, "Quit (Q)");
+        StdDraw.text(menuWidth / 2, menuHeight / 10 * 3, "Give yourself a Name(X)");
+        StdDraw.show();
+        byowServer.sendCanvas();
+    }
+
+
+
+
+
 
 }
