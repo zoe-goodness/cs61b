@@ -921,7 +921,8 @@ public class Engine {
             showWorldForServer(world, byowServer);
         }
     }
-    private void actionForInteractForServerForColumn(KeyboardInputSourceServer inputSource, TETile[][] world, BYOWServer byowServer) {
+    private void actionForInteractForServerForColumn(KeyboardInputSourceServer inputSource,
+                                                     TETile[][] world, BYOWServer byowServer) {
         if (inputSource.possibleNextInput()) {
             while (true) {
                 char temp = inputSource.getNextKey();
@@ -977,8 +978,7 @@ public class Engine {
             if (c == 'S' || c == 's') {
                 seed += c;
                 break;
-            }
-            else if (c != 'm') {
+            } else if (c != 'm') {
                 seed += c;
                 StdDraw.clear(Color.BLACK);
                 StdDraw.setPenColor(Color.WHITE);
