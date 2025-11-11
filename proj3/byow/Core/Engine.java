@@ -320,18 +320,32 @@ public class Engine {
         }
 
     }
-
-    private void actionForInteract(TETile[][] world) {
+    private int getAvatarX(TETile[][] world) {
         int avatarX = 0;
-        int avatarY = 0;
         for (int i = 0; i < world.length; i++) {
             for (int j = 0; j < world[0].length; j++) {
                 if (world[i][j].equals(Tileset.AVATAR)) {
                     avatarX = i;
+                }
+            }
+        }
+        return avatarX;
+    }
+    private int getAvatarY(TETile[][] world) {
+        int avatarY = 0;
+        for (int i = 0; i < world.length; i++) {
+            for (int j = 0; j < world[0].length; j++) {
+                if (world[i][j].equals(Tileset.AVATAR)) {
                     avatarY = j;
                 }
             }
         }
+        return avatarY;
+    }
+
+    private void actionForInteract(TETile[][] world) {
+        int avatarX = getAvatarX(world);
+        int avatarY = getAvatarY(world);
         InputSource inputSource = new KeyboardInputSource();
         while (inputSource.possibleNextInput()) {
             char c = inputSource.getNextKey();
@@ -345,7 +359,6 @@ public class Engine {
                         ter.initialize(WIDTH + 20, HEIGHT + 20);
                         ter.renderFrame(world);
                     } else {
-
                         avatarY = avatarY + 1;
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX][avatarY - 1] = Tileset.FLOOR;
@@ -375,7 +388,6 @@ public class Engine {
                         enterNewWorld();
                         ter.initialize(WIDTH + 20, HEIGHT + 20);
                         ter.renderFrame(world);
-
                     } else {
                         avatarY = avatarY - 1;
                         world[avatarX][avatarY] = Tileset.AVATAR;
@@ -398,43 +410,44 @@ public class Engine {
                     }
                 }
             } else if (c == ':') {
-                //:q保存
-                if (inputSource.possibleNextInput()) {
-                    while (true) {
-                        char temp = inputSource.getNextKey();
-                        if (temp == 'm') {
-                            double mouseX = StdDraw.mouseX();
-                            double mouseY = StdDraw.mouseY();
-                            StdDraw.setPenColor(Color.WHITE);
-                            StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
-                            StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
-                            StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
-                            StdDraw.show();
-                        }
-                        else if (temp == 'Q' || temp == 'q') {
-                            saveWorldToFile(world);
-                            return;
-                        } else {
-                            break;
-                        }
-                    }
-
-
-                }
-            }
-            else if (c == 'm') {
-                // mouse hud
-                double mouseX = StdDraw.mouseX();
-                double mouseY = StdDraw.mouseY();
-                StdDraw.setPenColor(Color.WHITE);
-                StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
-                StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
-                StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
-                StdDraw.show();
+                actionForInteractForColumn(inputSource, world);
+            } else if (c == 'm') {
+                actionForInteractForM(world);
             }
             showWorld(world);
         }
-
+    }
+    private void actionForInteractForColumn(InputSource inputSource, TETile[][] world) {
+        if (inputSource.possibleNextInput()) {
+            while (true) {
+                char temp = inputSource.getNextKey();
+                if (temp == 'm') {
+                    double mouseX = StdDraw.mouseX();
+                    double mouseY = StdDraw.mouseY();
+                    StdDraw.setPenColor(Color.WHITE);
+                    StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+                    StdDraw.text(world.length / 10.0, world[0].length * 1.4,
+                            world[(int) mouseX][(int) mouseY].description());
+                    StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
+                    StdDraw.show();
+                } else if (temp == 'Q' || temp == 'q') {
+                    saveWorldToFile(world);
+                    return;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+    private void actionForInteractForM(TETile[][] world) {
+        double mouseX = StdDraw.mouseX();
+        double mouseY = StdDraw.mouseY();
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+        StdDraw.text(world.length / 10.0, world[0].length * 1.4,
+                world[(int) mouseX][(int) mouseY].description());
+        StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
+        StdDraw.show();
     }
     /**
      * 用于interactWithKeyboard提示输入种子的页面
@@ -456,8 +469,7 @@ public class Engine {
             if (c == 'S' || c == 's') {
                 seed += c;
                 break;
-            }
-            else if (c != 'm'){
+            } else if (c != 'm') {
                 seed += c;
                 StdDraw.clear(Color.BLACK);
                 StdDraw.setPenColor(Color.WHITE);
@@ -516,7 +528,9 @@ public class Engine {
         for (int i = 0; i < time; i++) {
             roomGenerator.randomCreateRoom(random, world);
 
-            roomGenerator.connectRoom(roomGenerator.roomList.get(i), roomGenerator.roomList.get(i).nearestRoomList(roomGenerator.roomList), random, world);
+            roomGenerator.connectRoom(roomGenerator.getRoomList().get(i), roomGenerator.
+                    getRoomList().get(i).nearestRoomList(roomGenerator.getRoomList()),
+                    random, world);
 
         }
         WorldModifier.fillWithWall(world);
@@ -569,7 +583,8 @@ public class Engine {
      * @param world
      */
     private void saveWorldToFile(TETile[][] world) {
-        File worldFile = join(join(join(CWD.toString(), "byow").toString(), "Core").toString(), "world.txt");
+        File worldFile = join(join(join(CWD.toString(), "byow").toString(),
+                "Core").toString(), "world.txt");
         if (!worldFile.exists()) {
             try {
                 worldFile.createNewFile();
@@ -583,7 +598,7 @@ public class Engine {
                 identicalString[i][j] = world[i][j].character();
             }
         }
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(worldFile));){
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(worldFile));) {
             for (char[] row : identicalString) {
                 for (int j = 0; j < row.length; j++) {
                     writer.write(row[j]); // 写当前字符
@@ -601,7 +616,8 @@ public class Engine {
      * @return
      */
     private TETile[][] loadWorldFromFile() {
-        File worldFile = join(join(join(CWD.toString(), "byow").toString(), "Core").toString(), "world.txt");
+        File worldFile = join(join(join(CWD.toString(), "byow").toString(),
+                "Core").toString(), "world.txt");
         List<char[]> rows = new ArrayList<char[]>();
         try (BufferedReader reader = new BufferedReader(new FileReader(worldFile))) {
             String line;
@@ -638,8 +654,9 @@ public class Engine {
                 return Tileset.FLOWER;
             case '▲':
                 return Tileset.MOUNTAIN;
+            default:
+                return null;
         }
-        return null;
     }
     /** Return the concatentation of FIRST and OTHERS into a File designator */
     static File join(String first, String... others) {
@@ -651,9 +668,8 @@ public class Engine {
 
 
 
-    public void interactWithRemoteClient(String port) throws IOException{
+    public void interactWithRemoteClient(String port) throws IOException {
         BYOWServer byowServer = new BYOWServer(Integer.parseInt(port));
-
         TETile[][] world = new TETile[WIDTH][HEIGHT];
         world = initializeTiles(world);
         showMenuForServer(byowServer);
@@ -681,7 +697,6 @@ public class Engine {
                 StdDraw.pause(1000);
                 return;
             } else if (c == 'L' || c == 'l') {
-                //load game
                 world = loadWorldFromFile();
                 ter.initialize(WIDTH + 20, HEIGHT + 20);
                 byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
@@ -717,7 +732,8 @@ public class Engine {
                 StdDraw.text(40 / 2.0, 40 / 2.0, "Please input your name");
                 StdDraw.show();
                 byowServer.sendCanvas();
-                KeyboardInputSourceServer tempInputSource = new KeyboardInputSourceServer(byowServer);
+                KeyboardInputSourceServer tempInputSource =
+                        new KeyboardInputSourceServer(byowServer);
                 while (tempInputSource.possibleNextInput()) {
                     char tempC = tempInputSource.getNextKey();
                     if (tempC == KeyEvent.VK_ENTER) {
@@ -820,7 +836,12 @@ public class Engine {
     }
 
 
-
+    private void actionForInteractForLengthMinimize(TETile[][] world, BYOWServer byowServer) {
+        ter.initialize(WIDTH + 20, HEIGHT + 20);
+        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
+        ter.renderFrame(world);
+        byowServer.sendCanvas();
+    }
 
     private void actionForInteractForServer(TETile[][] world, BYOWServer byowServer) {
         int avatarX = 0;
@@ -843,12 +864,8 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX][avatarY - 1] = Tileset.FLOOR;
                         enterNewWorldForServer(byowServer);
-                        ter.initialize(WIDTH + 20, HEIGHT + 20);
-                        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
-                        ter.renderFrame(world);
-                        byowServer.sendCanvas();
+                        actionForInteractForLengthMinimize(world, byowServer);
                     } else {
-
                         avatarY = avatarY + 1;
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX][avatarY - 1] = Tileset.FLOOR;
@@ -861,10 +878,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX + 1][avatarY] = Tileset.FLOOR;
                         enterNewWorldForServer(byowServer);
-                        ter.initialize(WIDTH + 20, HEIGHT + 20);
-                        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
-                        ter.renderFrame(world);
-                        byowServer.sendCanvas();
+                        actionForInteractForLengthMinimize(world, byowServer);
                     } else {
                         avatarX = avatarX - 1;
                         world[avatarX][avatarY] = Tileset.AVATAR;
@@ -878,11 +892,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX][avatarY + 1] = Tileset.FLOOR;
                         enterNewWorldForServer(byowServer);
-                        ter.initialize(WIDTH + 20, HEIGHT + 20);
-                        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
-                        ter.renderFrame(world);
-                        byowServer.sendCanvas();
-
+                        actionForInteractForLengthMinimize(world, byowServer);
                     } else {
                         avatarY = avatarY - 1;
                         world[avatarX][avatarY] = Tileset.AVATAR;
@@ -896,10 +906,7 @@ public class Engine {
                         world[avatarX][avatarY] = Tileset.AVATAR;
                         world[avatarX - 1][avatarY] = Tileset.FLOOR;
                         enterNewWorldForServer(byowServer);
-                        ter.initialize(WIDTH + 20, HEIGHT + 20);
-                        byowServer.sendCanvasConfig((WIDTH + 20) * 16, (HEIGHT + 20) * 16);
-                        ter.renderFrame(world);
-                        byowServer.sendCanvas();
+                        actionForInteractForLengthMinimize(world, byowServer);
                     } else {
                         avatarX = avatarX + 1;
                         world[avatarX][avatarY] = Tileset.AVATAR;
@@ -907,45 +914,46 @@ public class Engine {
                     }
                 }
             } else if (c == ':') {
-                //:q保存
-                if (inputSource.possibleNextInput()) {
-                    while (true) {
-                        char temp = inputSource.getNextKey();
-                        if (temp == 'm') {
-                            double mouseX = StdDraw.mouseX();
-                            double mouseY = StdDraw.mouseY();
-                            StdDraw.setPenColor(Color.WHITE);
-                            StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
-                            StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
-                            StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
-                            StdDraw.show();
-                            byowServer.sendCanvas();
-                        }
-                        else if (temp == 'Q' || temp == 'q') {
-                            saveWorldToFile(world);
-                            return;
-                        } else {
-                            break;
-                        }
-                    }
-
-
-                }
-            }
-            else if (c == 'm') {
-                // mouse hud
-                double mouseX = StdDraw.mouseX();
-                double mouseY = StdDraw.mouseY();
-                StdDraw.setPenColor(Color.WHITE);
-                StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
-                StdDraw.text(world.length / 10.0, world[0].length * 1.4, world[(int)mouseX][(int)mouseY].description());
-                StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
-                StdDraw.show();
-                byowServer.sendCanvas();
+                actionForInteractForServerForColumn(inputSource, world, byowServer);
+            } else if (c == 'm') {
+                actionForInteractForServerForM(world, byowServer);
             }
             showWorldForServer(world, byowServer);
         }
-
+    }
+    private void actionForInteractForServerForColumn(KeyboardInputSourceServer inputSource, TETile[][] world, BYOWServer byowServer) {
+        if (inputSource.possibleNextInput()) {
+            while (true) {
+                char temp = inputSource.getNextKey();
+                if (temp == 'm') {
+                    double mouseX = StdDraw.mouseX();
+                    double mouseY = StdDraw.mouseY();
+                    StdDraw.setPenColor(Color.WHITE);
+                    StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+                    StdDraw.text(world.length / 10.0, world[0].length * 1.4,
+                            world[(int) mouseX][(int) mouseY].description());
+                    StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
+                    StdDraw.show();
+                    byowServer.sendCanvas();
+                } else if (temp == 'Q' || temp == 'q') {
+                    saveWorldToFile(world);
+                    return;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+    private void actionForInteractForServerForM(TETile[][] world, BYOWServer byowServer) {
+        double mouseX = StdDraw.mouseX();
+        double mouseY = StdDraw.mouseY();
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monaco", Font.BOLD, 20));
+        StdDraw.text(world.length / 10.0,
+                world[0].length * 1.4, world[(int) mouseX][(int) mouseY].description());
+        StdDraw.text(world.length / 10.0, world[0].length * 1.3, avatarName);
+        StdDraw.show();
+        byowServer.sendCanvas();
     }
     /**
      * 用于interactWithKeyboard提示输入种子的页面
@@ -970,7 +978,7 @@ public class Engine {
                 seed += c;
                 break;
             }
-            else if (c != 'm'){
+            else if (c != 'm') {
                 seed += c;
                 StdDraw.clear(Color.BLACK);
                 StdDraw.setPenColor(Color.WHITE);

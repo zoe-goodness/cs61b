@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static java.lang.Math.abs;
+
 
 public class RoomGenerator {
-    public List<Room> roomList = new ArrayList<>();
+    private List<Room> roomList = new ArrayList<>();
 
     /**
      * 随机在world上创建一个房间，并铺上地板，这一步不连接Room，如果出现重合的Room，则重新创建一个room
@@ -31,7 +31,7 @@ public class RoomGenerator {
                     roomX = randomRoomX(random, world);
                 }
                 if (roomX + roomWidth >= world.length) {
-                  roomWidth = 0;
+                    roomWidth = 0;
                 }
 
             }
@@ -56,10 +56,10 @@ public class RoomGenerator {
             }
             boolean overlap = false;
             for (Room room : roomList) {
-               if (room.overlapRoom(newRoom)) {
-                   overlap = true;
-                   break;
-               }
+                if (room.overlapRoom(newRoom)) {
+                    overlap = true;
+                    break;
+                }
             }
             if (!overlap) {
                 roomList.add(newRoom);
@@ -150,4 +150,7 @@ public class RoomGenerator {
 
     }
 
+    public List<Room> getRoomList() {
+        return roomList;
+    }
 }

@@ -20,14 +20,11 @@ public class Room {
      * @return true表示重叠了，false表示没重叠
      */
     public boolean overlapRoom(Room otherRoom) {
-        if (this.x + this.width < otherRoom.x ||  // this 在 other 左边
+        boolean condition = this.x + this.width < otherRoom.x ||  // this 在 other 左边
                 otherRoom.x + otherRoom.width < this.x || // this 在 other 右边
                 this.y + this.height < otherRoom.y || // this 在 other 下方
-                otherRoom.y + otherRoom.height < this.y) { // this 在 other 上方
-            return false; // 不重叠
-        } else {
-            return true;
-        }
+                otherRoom.y + otherRoom.height < this.y;
+        return !condition;
     }
 
     /**
@@ -40,12 +37,14 @@ public class Room {
             return null;
         }
         Room nearestRoom = roomList.get(0);
-        int nearestDistance = (nearestRoom.x - this.x) * (nearestRoom.x - this.x) + (nearestRoom.y - this.y) * (nearestRoom.y - this.y);
+        int nearestDistance = (nearestRoom.x - this.x) * (nearestRoom.x - this.x)
+                + (nearestRoom.y - this.y) * (nearestRoom.y - this.y);
         for (Room room : roomList) {
             if (room.equals(this)) {
                 continue;
             }
-            int tempDistance = (room.x - this.x) * (room.x - this.x) + (room.y - this.y) * (room.y - this.y);
+            int tempDistance = (room.x - this.x) * (room.x - this.x) + (room.y - this.y)
+                    * (room.y - this.y);
             if (tempDistance < nearestDistance) {
                 nearestDistance = tempDistance;
                 nearestRoom = room;
